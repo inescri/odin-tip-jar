@@ -1,6 +1,15 @@
-# odin-app-template
+# Odin Tip Jar
 
-Reference canister app template for building on **Odin Fun**. Fork it, deploy it, and you have a working app with Odin Connect auth, deposit/withdraw flows, and an internal multi-token ledger.
+A tip jar for **Odin Fun** users, built on
+[odin-app-template](https://github.com/Toniq-Labs/odin-app-template). Deposit
+Odin tokens once into the app canister, then tip any other Odin user
+instantly and fee-free — tips move internal balance between users inside the
+canister, so no Odin ledger transfer (and no network fee) is involved. Every
+user gets a shareable tip jar page (`/?jar=<principal>`), and a public feed
+shows the latest tips.
+
+The template's deposit / withdraw rails and hardened ledger core are kept
+unchanged; the tip feature is layered on top. See [Tipping](#tipping).
 
 ## Stack
 
@@ -25,7 +34,9 @@ flowchart LR
     oc --> popup
     popup -->|icrc2_approve| odin
     fe -->|"deposit / withdraw / getBalances"| can
+    fe -->|"tip / getRecentTips / getTipsFor / getReceivedTotals"| can
     can --> ledger
+    can --> tips[("Tip feed + received totals<br/>StableBTreeMap")]
     can -->|"icrc2_transfer_from (deposit + withdraw fee)<br/>icrc1_transfer (withdraw)"| odin
 ```
 
@@ -41,6 +52,12 @@ balance (persisted *before* the transfer await), pulls the BTC ledger fee from
 the withdrawer (`icrc2_transfer_from`, see [Withdrawal fees](#withdrawal-fees)),
 then sends the tokens back out on the Odin ledger (`icrc1_transfer`), refunding
 the debit on failure.
+
+**Tip**: the user calls `tip(to, tokenId, amount)`; the canister debits the
+caller's internal balance and credits the recipient's, records the tip in a
+bounded public feed and adds it to the recipient's lifetime received total.
+No Odin ledger call is made, so there is no fee. The call is synchronous (no
+`await`), which makes it atomic: a failure anywhere rolls back every write.
 
 ## Odin Connect in the frontend
 
@@ -117,7 +134,7 @@ sessions", "Wallet in-app browsers").
 ```
 packages/
   canister/   # Azle canister — internal multi-token ledger
-  frontend/   # Vite + React app — Odin Connect auth + deposit/withdraw UI
+  frontend/   # Vite + React app — Odin Connect auth + deposit/withdraw/tip UI
 dfx.json      # canister (azle) + frontend (asset) canister config
 ```
 
@@ -143,7 +160,7 @@ dfx deploy            # build + deploy canister and frontend
 > If `pnpm install` ran before `dfx` was installed, register the azle dfx extension manually:
 >
 > ```sh
-> pnpm --filter @odin-app/canister exec azle extension install
+> pnpm --filter @odin-tip-jar/canister exec azle extension install
 > ```
 
 Frontend dev server:
@@ -161,7 +178,7 @@ pnpm dev:frontend
 | `pnpm build:frontend`  | Build the frontend                   |
 | `pnpm dev:frontend`    | Start the Vite dev server            |
 | `pnpm typecheck`       | Type-check all packages              |
-| `pnpm test`            | Run unit tests (ledger)              |
+| `pnpm test`            | Run unit tests (ledger, tips, frontend helpers) |
 
 ## Canister API
 
@@ -172,6 +189,10 @@ pnpm dev:frontend
 | `getBalance`    | query  | Caller's internal balance for one token.                          |
 | `getBalances`   | query  | All of the caller's `(token, balance)` pairs.                     |
 | `getOwner`      | query  | The configured owner principal, or empty if not yet initialized.  |
+| `tip`           | update | Move `amount` of `tokenId` from the caller's internal balance to `to`'s. Fee-free, synchronous, logged. Rejects anonymous callers/recipients and self-tips. Returns the caller's new balance. |
+| `getRecentTips` | query  | The latest tips across all users, newest first (`limit`, max 500). |
+| `getTipsFor`    | query  | The latest tips received by a principal, newest first.            |
+| `getReceivedTotals` | query | Lifetime `(token, total)` pairs a principal has received via tips. Exact regardless of feed eviction. |
 | `icrc28_trusted_origins` | update | [ICRC-28](https://github.com/dfinity/wg-identity-authentication) trusted origins — the web origins allowed to request signed calls. Odin Connect calls this before issuing a delegation and refuses auth if your app's origin is not listed. |
 
 > **ICRC-28 / Odin Connect auth:** the trusted origins are configured in
@@ -187,6 +208,54 @@ Tokens are identified by their **Odin token id** (text), not an ICRC ledger
 principal — every Odin token shares one ledger and is addressed by subaccount
 (`odin_token_pointer`). Balances are keyed by `(owner, tokenId)` and stored in
 stable memory, so they survive upgrades.
+
+### Tipping
+
+`tip` is the only balance-moving endpoint added on top of the template. It is
+built *around* the hardened ledger core, not inside it: it composes the
+existing `validateAmount` / `debit` / `credit` helpers from
+[`packages/canister/src/ledger.ts`](packages/canister/src/ledger.ts), so it can
+never create balance — `deposit` remains the only mint path. Party checks and
+feed bookkeeping live in the pure, unit-tested
+[`packages/canister/src/tips.ts`](packages/canister/src/tips.ts).
+
+Rules enforced by the canister:
+
+- the caller must not be anonymous (no balance, no identity to log);
+- the recipient must not be the anonymous principal (it can never withdraw);
+- you cannot tip yourself;
+- the caller is debited (and the debit persisted) **before** the recipient is
+  read and credited;
+- no `await` inside `tip` — adding a cross-canister call would break its
+  atomicity. Keep it synchronous.
+
+**Public feed.** Tips are stored in a bounded log of the latest **500** tips;
+older entries are evicted. The feed is a UX feature, not an audit trail — the
+per-recipient totals (`getReceivedTotals`) are kept in a separate map and stay
+exact forever. Tip records (sender, recipient, token, amount, time) and totals
+are public by design.
+
+**Stable memory ids**: `0` ledger · `1` config · `2` tip feed · `3` received
+totals. Never reuse or renumber an id.
+
+### Tip jar links (`?jar=`)
+
+Every user's tip jar lives at `/?jar=<principal>`. The page shows the Odin
+profile (username, avatar), lifetime received totals, that user's recent tips,
+and — when the visitor is connected — a tip form locked to that recipient. It
+renders while logged out: public reads go through an anonymous actor
+([`createAnonymousActor`](packages/frontend/src/canister/actor.ts)), which is
+never used for `tip` / `deposit` / `withdraw`.
+
+Two rules from the template still apply:
+
+- the param is read only once odin-connect has finished restoring
+  (`status !== 'restoring'`), because after a redirect-mode connect the SDK
+  restores the original query string in `ready()` — see
+  [`src/App.tsx`](packages/frontend/src/App.tsx);
+- it is called `jar`, not `to` / `redirect`, and is only ever validated as a
+  principal (never used as a navigation target), so it cannot become an open
+  redirect. See [`src/lib/jar.ts`](packages/frontend/src/lib/jar.ts).
 
 ### Withdrawal fees
 
@@ -217,6 +286,9 @@ cover both. See `ODIN_BTC_FEE` in
 
 ## Deploy to mainnet
 
+The reference deployment's backend canister is `v7drs-jyaaa-aaaaf-qhaca-cai`
+(network `ic`).
+
 1. Make sure you have a cycles-funded identity (`dfx identity get-principal`,
    then fund it with cycles — see the
    [cycles docs](https://internetcomputer.org/docs/current/developer-docs/getting-started/cycles/cycles-wallet)).
@@ -228,6 +300,19 @@ cover both. See `ODIN_BTC_FEE` in
    dfx deploy --network ic          # deploy canister + frontend asset canister
    ```
 
+   Canister creation costs 0.5 TC each, so on a small cycles balance deploy
+   only the backend and host the static frontend elsewhere:
+
+   ```sh
+   dfx deploy canister --network ic --with-cycles 1000000000000
+   ```
+
+   A [`netlify.toml`](netlify.toml) is included for Netlify: it builds
+   `packages/frontend` and publishes `dist`. Set `VITE_APP_CANISTER_ID`,
+   `VITE_DFX_NETWORK=ic` and `VITE_ODIN_ENV=prod` in the site's environment
+   variables (they are baked into the bundle at build time), then put the
+   Netlify origin in `TRUSTED_ORIGINS` (step 5).
+
 3. The deploying principal is recorded as the **owner** (see `@init` in
    [`packages/canister/src/index.ts`](packages/canister/src/index.ts)) — a
    generic admin handle for any admin-gated endpoints you add later. Deposits are
@@ -236,7 +321,9 @@ cover both. See `ODIN_BTC_FEE` in
    needed.
 
 4. Note the canister IDs printed on deploy; the frontend reads them from the
-   generated `.env` (`output_env_file` in `dfx.json`).
+   generated `.env` (`output_env_file` in `dfx.json`). Mainnet ids are written
+   to `canister_ids.json`, which is gitignored by default — keep a copy (or
+   remove it from `.gitignore`) or dfx will create a new canister next time.
 
 5. **Set your trusted origins.** Edit `TRUSTED_ORIGINS` in
    [`packages/canister/src/index.ts`](packages/canister/src/index.ts) to the
@@ -255,7 +342,7 @@ cover both. See `ODIN_BTC_FEE` in
 ## How to extend
 
 **Add support for a new token** — no code change needed. Tokens are identified
-by their Odin token id (text); pass the id to `deposit` / `withdraw` /
+by their Odin token id (text); pass the id to `deposit` / `withdraw` / `tip` /
 `getBalance`. The ledger keys every balance by `(owner, tokenId)`, so new tokens
 work out of the box.
 

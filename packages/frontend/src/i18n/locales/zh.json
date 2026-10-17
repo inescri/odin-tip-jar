@@ -1,8 +1,8 @@
 {
     "app": {
-        "title": "odin-app-template",
-        "intro": "用于在 Odin Fun 上开发的参考 canister 应用。已通过 Odin Connect 接入身份认证——充值/提现流程和多代币账本界面将在后续子任务中实现。",
-        "connectPrompt": "使用 Odin 连接以充值、提现并查看您的余额。"
+        "title": "Odin 打赏罐",
+        "intro": "直接用内部余额打赏任意 Odin 用户——即时到账、零手续费。充值一次代币，分享你的打赏罐链接，坐等打赏进账。",
+        "connectPrompt": "使用 Odin 连接以充值、打赏和提现。"
     },
     "auth": {
         "restoring": "正在恢复会话…",
@@ -15,6 +15,48 @@
         "label": "语言",
         "en": "EN",
         "zh": "中文"
+    },
+    "jar": {
+        "heading": "你的打赏罐",
+        "linkLabel": "分享此链接以接收打赏",
+        "copy": "复制链接",
+        "copied": "已复制！",
+        "open": "打开",
+        "back": "← 返回首页",
+        "title": "{{name}} 的打赏罐",
+        "receivedHeading": "累计收到",
+        "noReceived": "尚未收到任何打赏。",
+        "ownJar": "这是你自己的打赏罐——分享链接即可接收打赏。",
+        "connectToTip": "使用 Odin 连接以打赏。",
+        "loadingProfile": "正在加载资料…",
+        "unknownUser": "不是已知的 Odin 用户——打赏仍会发送到此 principal。"
+    },
+    "tip": {
+        "heading": "发送打赏",
+        "recipientLabel": "收款人",
+        "recipientPlaceholder": "收款人 principal",
+        "selectToken": "选择代币…",
+        "amountPlaceholder": "金额",
+        "max": "最大",
+        "submit": "打赏",
+        "sending": "正在发送…",
+        "sent": "打赏已发送！",
+        "noBalances": "没有可用于打赏的内部余额。请先充值一些代币。",
+        "note": "打赏在 canister 内部的用户之间转移余额——无需 Odin 账本转账，零网络手续费。",
+        "errors": {
+            "invalidRecipient": "收款人 principal 无效。",
+            "selfTip": "不能打赏自己。",
+            "tipFailed": "打赏失败：{{message}}"
+        }
+    },
+    "feed": {
+        "heading": "最近打赏",
+        "empty": "还没有打赏——来做第一个吧！",
+        "loading": "正在加载…",
+        "when": "时间",
+        "from": "来自",
+        "to": "发给",
+        "amount": "金额"
     },
     "deposit": {
         "heading": "充值",
@@ -55,11 +97,13 @@
         "notConnected": "未连接。",
         "selectTokenDeposit": "请选择要充值的代币。",
         "selectTokenWithdraw": "请选择要提现的代币。",
+        "selectTokenTip": "请选择要打赏的代币。",
         "invalidAmount": "金额无效。",
         "amountGreaterThanZero": "金额必须大于零。",
         "approvalRejected": "授权已取消或被拒绝。",
         "canisterUnavailableDeposit": "canister 不可用——请重新连接以启用充值。",
         "canisterUnavailableWithdraw": "canister 不可用——请重新连接以启用提现。",
+        "canisterUnavailableTip": "canister 不可用——请重新连接以启用打赏。",
         "tokenInfoLoading": "代币信息仍在加载——请稍后重试。",
         "insufficientBalance": "内部余额不足。",
         "unexpected": "发生意外错误",
