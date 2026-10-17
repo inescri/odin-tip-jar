@@ -5,6 +5,7 @@ import {
     msgCaller,
     query,
     StableBTreeMap,
+    time,
     update,
 } from 'azle';
 import { Principal } from '@dfinity/principal';
@@ -16,6 +17,16 @@ import {
     odinSendToken,
 } from './odin';
 import { credit, debit, makeKey, parseKey, validateAmount } from './ledger';
+import {
+    assertTipParties,
+    clampLimit,
+    excessCount,
+    MAX_TIPS,
+    newestFirst,
+    TIP_SEQ_KEY,
+    tipKey,
+} from './tips';
+import type { TipRecord } from './tips';
 
 /**
  * ⚠️ EDIT BEFORE DEPLOY — must list the exact origin(s) your frontend is served
@@ -37,12 +48,26 @@ const TRUSTED_ORIGINS: string[] = [
     'http://localhost:5173',
     // Local dev — Vite dev server (fallback port when 5173 is taken).
     'http://localhost:5174',
-    // Production — Netlify-hosted frontend.
-    'https://odin-app-template.netlify.app',
+    // Production — add your deployed frontend origin here, e.g.
+    // 'https://odin-tip-jar.netlify.app',
 ];
 
 /**
- * odin-app-template reference canister — multi-token internal ledger.
+ * Candid shape of one public tip-feed entry. Matches `TipRecord` in tips.ts;
+ * the stored record is returned as-is (stableJson round-trips Principal and
+ * bigint), so no mapping layer is needed.
+ */
+const Tip = IDL.Record({
+    id: IDL.Nat,
+    from: IDL.Principal,
+    to: IDL.Principal,
+    tokenId: IDL.Text,
+    amount: IDL.Nat,
+    timestamp: IDL.Nat64,
+});
+
+/**
+ * Odin Tip Jar canister — multi-token internal ledger plus fee-free tipping.
  *
  * Tracks an internal balance per (principal, token) pair, backed by stable
  * memory so balances survive upgrades. Tokens are identified by their Odin
@@ -54,6 +79,12 @@ const TRUSTED_ORIGINS: string[] = [
  *              the caller's internal balance.
  *   withdraw — the caller debits their internal balance and the canister sends
  *              the tokens back out on the Odin ledger (icrc1_transfer).
+ *   tip      — the caller moves internal balance to another user. Purely
+ *              internal: no Odin ledger call, no fee. Logged to a bounded
+ *              public feed and summed into per-recipient received totals.
+ *
+ * Stable memory ids (never reuse or renumber):
+ *   0 ledger · 1 config · 2 tips (feed log) · 3 received (totals)
  *
  * ⚠️ AI-GUARD: The balance-mutating paths below are hardened ledger core.
  * Preserve the checks-effects-interactions ordering. See ledger.ts and the AI
@@ -65,6 +96,12 @@ export default class {
 
     /** Canister config (e.g. the deploying admin principal). Memory id 1. */
     config = new StableBTreeMap<string, string>(1);
+
+    /** Public tip feed, key = tipKey(id), bounded to MAX_TIPS. Memory id 2. */
+    tips = new StableBTreeMap<string, TipRecord>(2);
+
+    /** (recipient|token) → total ever received via tips. Memory id 3. */
+    received = new StableBTreeMap<string, bigint>(3);
 
     /**
      * Record the deploying principal as the owner — a generic admin handle
@@ -173,6 +210,118 @@ export default class {
 
         // Return the caller's new internal balance, matching `deposit`.
         return next;
+    }
+
+    /**
+     * Move `amount` of the Odin token `tokenId` from the caller's internal
+     * balance to `to`'s. No Odin ledger call and no fee — the tokens never
+     * leave this canister, only the internal ownership changes.
+     *
+     * Composes the hardened `debit` / `credit` from ledger.ts; it creates no
+     * balance (invariant 1 holds: `deposit` is still the only mint path).
+     *
+     * Deliberately SYNCHRONOUS (no `await`): an update with no await runs to
+     * completion in one message, so a throw anywhere rolls back every map
+     * write and nothing can interleave. Do not add a cross-canister call here.
+     *
+     * Ordering: the sender is debited and persisted BEFORE the recipient's
+     * balance is read, so even a self-tip could not double-count — and
+     * self-tips are rejected outright by `assertTipParties`.
+     *
+     * Returns the caller's new balance for `tokenId`, like deposit/withdraw.
+     */
+    @update([IDL.Principal, IDL.Text, IDL.Nat], IDL.Nat)
+    tip(to: Principal, tokenId: string, amount: bigint): bigint {
+        validateAmount(amount);
+
+        const from = msgCaller();
+        assertTipParties(from, to);
+
+        const fromKey = makeKey(from.toText(), tokenId);
+        const toKey = makeKey(to.toText(), tokenId);
+
+        // Debit the sender first; throws on insufficient balance.
+        const senderNext = debit(this.ledger.get(fromKey) ?? 0n, amount);
+        this.ledger.insert(fromKey, senderNext);
+
+        // Then credit the recipient, reading their balance only now.
+        const recipientNext = credit(this.ledger.get(toKey) ?? 0n, amount);
+        this.ledger.insert(toKey, recipientNext);
+
+        // Bookkeeping for the public feed and the recipient's lifetime total.
+        const receivedNext = credit(this.received.get(toKey) ?? 0n, amount);
+        this.received.insert(toKey, receivedNext);
+        this.recordTip(from, to, tokenId, amount);
+
+        return senderNext;
+    }
+
+    /** The most recent tips across all users, newest first (max MAX_TIPS). */
+    @query([IDL.Nat], IDL.Vec(Tip))
+    getRecentTips(limit: bigint): TipRecord[] {
+        return newestFirst(this.tips.values(), clampLimit(limit));
+    }
+
+    /** The most recent tips received by `who`, newest first (max MAX_TIPS). */
+    @query([IDL.Principal, IDL.Nat], IDL.Vec(Tip))
+    getTipsFor(who: Principal, limit: bigint): TipRecord[] {
+        const recipient = who.toText();
+        const mine = this.tips
+            .values()
+            .filter((t) => t.to.toText() === recipient);
+        return newestFirst(mine, clampLimit(limit));
+    }
+
+    /**
+     * Lifetime tip totals received by `who`, as (tokenId, total) pairs. Exact
+     * regardless of feed eviction. Scans the whole `received` map, like
+     * `getBalances` scans `ledger` — fine at tip-jar scale.
+     */
+    @query([IDL.Principal], IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat)))
+    getReceivedTotals(who: Principal): [string, bigint][] {
+        const recipient = who.toText();
+        const totals: [string, bigint][] = [];
+        for (const [key, total] of this.received.items()) {
+            const { owner, token } = parseKey(key);
+            if (owner === recipient) {
+                totals.push([token, total]);
+            }
+        }
+        return totals;
+    }
+
+    /**
+     * Append a tip to the bounded feed log and evict the oldest entries past
+     * MAX_TIPS. Not decorated, so it is not exposed as a canister method.
+     * The sequence counter lives in `config` as a decimal string: it needs no
+     * extra memory id, survives upgrades, and never resets (so ids stay
+     * unique even after eviction).
+     */
+    private recordTip(
+        from: Principal,
+        to: Principal,
+        tokenId: string,
+        amount: bigint,
+    ): void {
+        const id = BigInt(this.config.get(TIP_SEQ_KEY) ?? '0');
+        this.config.insert(TIP_SEQ_KEY, (id + 1n).toString());
+        this.tips.insert(tipKey(id), {
+            id,
+            from,
+            to,
+            tokenId,
+            amount,
+            timestamp: time(),
+        });
+
+        const excess = excessCount(this.tips.len(), MAX_TIPS);
+        if (excess > 0) {
+            // Keys are zero-padded, so byte order is numeric order: the first
+            // `excess` keys are the oldest tips.
+            for (const key of this.tips.keys(0, excess)) {
+                this.tips.remove(key);
+            }
+        }
     }
 
     /** The caller's internal balance for a single Odin token. */
