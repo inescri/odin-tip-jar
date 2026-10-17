@@ -12,30 +12,16 @@ interface BalancesWidgetProps {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-    card: {
-        border: '1px solid #e2e2e2',
-        borderRadius: '12px',
-        padding: '1.25rem',
-    },
     head: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
+        gap: '0.5rem',
         marginBottom: '0.5rem',
     },
-    heading: { margin: 0, fontSize: '1.1rem' },
-    refresh: {
-        padding: '0.25rem 0.6rem',
-        borderRadius: '8px',
-        border: '1px solid #ccc',
-        background: 'transparent',
-        color: 'inherit',
-        fontSize: '0.8rem',
-        cursor: 'pointer',
-    },
+    heading: { margin: 0 },
     list: { listStyle: 'none', padding: 0, margin: 0 },
-    ticker: { fontWeight: 600, opacity: 0.8 },
-    note: { fontSize: '0.9rem', opacity: 0.7, margin: 0 },
+    note: { margin: 0 },
 };
 
 /**
@@ -49,14 +35,14 @@ export function BalancesWidget({ balances, loading, onRefresh }: BalancesWidgetP
     const meta = useTokenMeta(tokenIds);
 
     return (
-        <section className="balances-card" style={styles.card} aria-labelledby="balances-heading">
+        <section className="card balances-card" aria-labelledby="balances-heading">
             <div style={styles.head}>
                 <h2 id="balances-heading" style={styles.heading}>
                     {t('balances.heading')}
                 </h2>
                 <button
                     type="button"
-                    style={styles.refresh}
+                    className="btn btn-outline btn-sm"
                     onClick={() => void onRefresh()}
                     disabled={loading}
                 >
@@ -65,14 +51,14 @@ export function BalancesWidget({ balances, loading, onRefresh }: BalancesWidgetP
             </div>
 
             {balances.length === 0 ? (
-                <p style={styles.note}>{loading ? t('feed.loading') : t('balances.empty')}</p>
+                <p className="note" style={styles.note}>{loading ? t('feed.loading') : t('balances.empty')}</p>
             ) : (
                 <ul style={styles.list}>
                     {balances.map((b) => {
                         const m = meta.get(b.token);
                         return (
                             <li key={b.token} className="balances-total">
-                                <span style={styles.ticker}>{m?.ticker ?? b.token}</span>
+                                <span className="balances-ticker">{m?.ticker ?? b.token}</span>
                                 <span className="balances-amount">
                                     {formatTokenAmount(b.amount, tokenPlaces(m))}
                                 </span>

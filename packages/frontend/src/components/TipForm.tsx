@@ -32,50 +32,16 @@ function toMessage(error: unknown, fallback: string): string {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-    card: {
-        border: '1px solid #e2e2e2',
-        borderRadius: '12px',
-        padding: '1.25rem',
-        marginTop: '1.5rem',
-    },
+    // Colours, borders and control shapes come from the theme classes
+    // (`card`, `field`, `btn`, …) in styles.css; only layout lives here.
+    card: { marginTop: '1.5rem' },
     row: { display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' },
-    label: { fontSize: '0.85rem', opacity: 0.7, minWidth: '2.5rem' },
-    recipient: {
-        padding: '0.5rem',
-        borderRadius: '8px',
-        width: '100%',
-        maxWidth: '440px',
-        fontFamily: 'ui-monospace, monospace',
-    },
-    chip: {
-        display: 'inline-block',
-        padding: '0.4rem 0.6rem',
-        borderRadius: '8px',
-        background: '#f4f4f4',
-        fontFamily: 'ui-monospace, monospace',
-        fontSize: '0.9rem',
-    },
-    select: { padding: '0.5rem', borderRadius: '8px', minWidth: '160px' },
-    input: { padding: '0.5rem', borderRadius: '8px', width: '160px' },
-    button: {
-        padding: '0.5rem 1rem',
-        borderRadius: '8px',
-        border: 'none',
-        background: '#f7931a',
-        color: '#fff',
-        fontWeight: 600,
-        cursor: 'pointer',
-    },
-    max: {
-        padding: '0.5rem 0.6rem',
-        borderRadius: '8px',
-        border: '1px solid #ccc',
-        background: 'transparent',
-        cursor: 'pointer',
-    },
-    error: { color: '#c0392b', fontSize: '0.9rem', marginTop: '0.5rem' },
-    ok: { color: '#1e824c', fontSize: '0.9rem', marginTop: '0.5rem' },
-    note: { fontSize: '0.8rem', opacity: 0.7, marginTop: '0.75rem' },
+    select: { minWidth: '160px' },
+    input: { width: '160px' },
+    message: { marginTop: '0.5rem' },
+    note: { marginTop: '0.75rem', marginBottom: 0 },
+    label: { minWidth: '2.5rem', margin: 0 },
+    recipient: { width: '100%', maxWidth: '440px' },
 };
 
 /**
@@ -186,17 +152,21 @@ export function TipForm({ actor, balances, recipient, onTipped, bare = false }: 
     }, [actor, to, principal, selected, selectedToken, amount, locked, onTipped, t]);
 
     return (
-        <section style={bare ? undefined : styles.card}>
-            {bare ? null : <h2 style={{ marginTop: 0 }}>{t('tip.heading')}</h2>}
+        <section
+            className={bare ? undefined : 'card'}
+            style={bare ? undefined : styles.card}
+        >
+            {bare ? null : <h2>{t('tip.heading')}</h2>}
 
             <div style={{ ...styles.row, marginBottom: '0.75rem' }}>
-                <span style={styles.label}>{t('tip.recipientLabel')}</span>
+                <span className="note" style={styles.label}>{t('tip.recipientLabel')}</span>
                 {locked ? (
-                    <span style={styles.chip} title={recipient}>
+                    <span className="chip" title={recipient}>
                         {shortPrincipal(recipient)}
                     </span>
                 ) : (
                     <input
+                        className="field mono"
                         style={styles.recipient}
                         type="text"
                         placeholder={t('tip.recipientPlaceholder')}
@@ -211,6 +181,7 @@ export function TipForm({ actor, balances, recipient, onTipped, bare = false }: 
 
             <div style={styles.row}>
                 <select
+                    className="field"
                     style={styles.select}
                     value={selectedTokenId}
                     onChange={(e) => {
@@ -233,6 +204,7 @@ export function TipForm({ actor, balances, recipient, onTipped, bare = false }: 
                 </select>
 
                 <input
+                    className="field"
                     style={styles.input}
                     type="text"
                     inputMode="decimal"
@@ -244,7 +216,7 @@ export function TipForm({ actor, balances, recipient, onTipped, bare = false }: 
 
                 <button
                     type="button"
-                    style={styles.max}
+                    className="btn btn-outline"
                     onClick={fillMax}
                     disabled={busy || selected === null || selectedToken === undefined}
                 >
@@ -253,7 +225,7 @@ export function TipForm({ actor, balances, recipient, onTipped, bare = false }: 
 
                 <button
                     type="button"
-                    style={styles.button}
+                    className="btn btn-primary"
                     onClick={() => void sendTip()}
                     disabled={busy || selectedTokenId === '' || amount === '' || to === ''}
                 >
@@ -261,19 +233,19 @@ export function TipForm({ actor, balances, recipient, onTipped, bare = false }: 
                 </button>
             </div>
 
-            <p style={styles.note}>{t('tip.note')}</p>
+            <p className="note" style={styles.note}>{t('tip.note')}</p>
 
             {error !== null ? (
-                <div style={styles.error} role="alert">
+                <div className="error" style={styles.message} role="alert">
                     {error}
                 </div>
             ) : null}
             {stage === 'done' && error === null ? (
-                <div style={styles.ok}>{t('tip.sent')}</div>
+                <div className="ok" style={styles.message}>{t('tip.sent')}</div>
             ) : null}
 
             {balances.length === 0 ? (
-                <p style={styles.note}>{t('tip.noBalances')}</p>
+                <p className="note" style={styles.note}>{t('tip.noBalances')}</p>
             ) : null}
         </section>
     );

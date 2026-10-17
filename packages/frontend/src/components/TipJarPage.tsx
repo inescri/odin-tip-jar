@@ -20,7 +20,7 @@ interface TipJarPageProps {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-    back: { display: 'inline-block', marginTop: '1rem', color: 'inherit' },
+    back: { display: 'inline-block', marginTop: '0.25rem' },
     profile: {
         display: 'flex',
         alignItems: 'center',
@@ -32,31 +32,17 @@ const styles: Record<string, React.CSSProperties> = {
         height: '64px',
         borderRadius: '50%',
         objectFit: 'cover',
-        background: '#eee',
         flexShrink: 0,
     },
     name: { margin: 0, fontSize: '1.5rem' },
     principal: {
-        fontFamily: 'ui-monospace, monospace',
-        fontSize: '0.9rem',
-        opacity: 0.7,
+        fontFamily: 'var(--font-mono)',
+        fontSize: '0.85rem',
+        color: 'var(--muted)',
         wordBreak: 'break-all',
     },
-    card: {
-        border: '1px solid #e2e2e2',
-        borderRadius: '12px',
-        padding: '1.25rem',
-        marginTop: '1.5rem',
-    },
     totals: { listStyle: 'none', padding: 0, margin: 0 },
-    total: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        padding: '0.35rem 0',
-        borderBottom: '1px solid #f0f0f0',
-        fontVariantNumeric: 'tabular-nums',
-    },
-    note: { fontSize: '0.9rem', opacity: 0.7, margin: 0 },
+    note: { margin: 0 },
 };
 
 /**
@@ -103,16 +89,16 @@ export function TipJarPage({ recipient }: TipJarPageProps) {
 
             <div style={styles.profile}>
                 {avatarUrl !== null ? (
-                    <img src={avatarUrl} alt={displayName} style={styles.avatar} />
+                    <img src={avatarUrl} alt={displayName} className="avatar-placeholder" style={styles.avatar} />
                 ) : (
-                    <div style={styles.avatar} aria-hidden="true" />
+                    <div className="avatar-placeholder" style={styles.avatar} aria-hidden="true" />
                 )}
                 <div style={{ minWidth: 0 }}>
                     <h2 style={styles.name}>{t('jar.title', { name: displayName })}</h2>
                     <div style={styles.principal} title={recipient}>
                         {recipient}
                     </div>
-                    {notFound ? <p style={styles.note}>{t('jar.unknownUser')}</p> : null}
+                    {notFound ? <p className="note" style={styles.note}>{t('jar.unknownUser')}</p> : null}
                 </div>
             </div>
 
@@ -136,14 +122,14 @@ export function TipJarPage({ recipient }: TipJarPageProps) {
                     <TipFeed tips={feed.tips} loading={feed.loading} error={feed.error} hideTo />
                 </div>
                 <aside className="layout-sidebar">
-                    <section style={styles.card}>
-                        <h2 style={{ marginTop: 0 }}>{t('jar.receivedHeading')}</h2>
+                    <section className="card">
+                        <h2>{t('jar.receivedHeading')}</h2>
                         {totalsState.error !== null ? (
-                            <p style={{ ...styles.note, color: '#c0392b' }} role="alert">
+                            <p className="error" style={styles.note} role="alert">
                                 {totalsState.error}
                             </p>
                         ) : totalsState.totals.length === 0 ? (
-                            <p style={styles.note}>
+                            <p className="note" style={styles.note}>
                                 {totalsState.loading ? t('feed.loading') : t('jar.noReceived')}
                             </p>
                         ) : (
@@ -151,9 +137,11 @@ export function TipJarPage({ recipient }: TipJarPageProps) {
                                 {totalsState.totals.map((b) => {
                                     const m = meta.get(b.token);
                                     return (
-                                        <li key={b.token} style={styles.total}>
-                                            <span>{m?.ticker ?? b.token}</span>
-                                            <strong>{formatTokenAmount(b.amount, tokenPlaces(m))}</strong>
+                                        <li key={b.token} className="balances-total">
+                                            <span className="balances-ticker">{m?.ticker ?? b.token}</span>
+                                            <span className="balances-amount">
+                                                {formatTokenAmount(b.amount, tokenPlaces(m))}
+                                            </span>
                                         </li>
                                     );
                                 })}

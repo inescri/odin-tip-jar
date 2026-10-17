@@ -8,40 +8,11 @@ interface JarLinkCardProps {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-    card: {
-        border: '1px solid #f7931a',
-        borderRadius: '12px',
-        padding: '1.25rem',
-        marginTop: '1.5rem',
-        background: '#fff8f0',
-    },
+    // Accent border so the share link stands out among the cards.
+    card: { marginTop: '1.5rem', borderColor: 'var(--accent-soft)' },
     row: { display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' },
-    input: {
-        padding: '0.5rem',
-        borderRadius: '8px',
-        border: '1px solid #ccc',
-        flex: '1 1 320px',
-        minWidth: 0,
-        fontFamily: 'ui-monospace, monospace',
-        fontSize: '0.9rem',
-    },
-    button: {
-        padding: '0.5rem 1rem',
-        borderRadius: '8px',
-        border: 'none',
-        background: '#f7931a',
-        color: '#fff',
-        fontWeight: 600,
-        cursor: 'pointer',
-    },
-    link: {
-        padding: '0.5rem 0.8rem',
-        borderRadius: '8px',
-        border: '1px solid #ccc',
-        color: 'inherit',
-        textDecoration: 'none',
-    },
-    note: { fontSize: '0.85rem', opacity: 0.75, marginTop: '0.75rem', marginBottom: 0 },
+    input: { flex: '1 1 320px', fontSize: '0.8rem', padding: '0 0.75rem' },
+    note: { marginTop: '0.75rem', marginBottom: 0 },
 };
 
 /** The connected user's shareable tip jar link, with copy + open actions. */
@@ -71,11 +42,12 @@ export function JarLinkCard({ principal }: JarLinkCardProps) {
     }, [url]);
 
     return (
-        <section style={styles.card}>
-            <h2 style={{ marginTop: 0 }}>{t('jar.heading')}</h2>
+        <section className="card" style={styles.card}>
+            <h2>{t('jar.heading')}</h2>
             <div style={styles.row}>
                 <input
                     ref={inputRef}
+                    className="field mono"
                     style={styles.input}
                     type="text"
                     readOnly
@@ -83,14 +55,14 @@ export function JarLinkCard({ principal }: JarLinkCardProps) {
                     onFocus={(e) => e.currentTarget.select()}
                     aria-label={t('jar.linkLabel')}
                 />
-                <button type="button" style={styles.button} onClick={() => void copy()}>
+                <button type="button" className="btn btn-primary" onClick={() => void copy()}>
                     {copied ? t('jar.copied') : t('jar.copy')}
                 </button>
-                <a href={buildJarPath(principal)} style={styles.link}>
+                <a href={buildJarPath(principal)} className="btn btn-outline">
                     {t('jar.open')}
                 </a>
             </div>
-            <p style={styles.note}>{t('jar.linkLabel')}</p>
+            <p className="note" style={styles.note}>{t('jar.linkLabel')}</p>
         </section>
     );
 }

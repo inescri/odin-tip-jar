@@ -12,17 +12,6 @@ const styles: Record<string, React.CSSProperties> = {
         gap: '0.75rem',
         minHeight: '40px',
     },
-    button: {
-        padding: '0.5rem 1rem',
-        borderRadius: '8px',
-        border: 'none',
-        background: '#f7931a',
-        color: '#fff',
-        fontWeight: 600,
-        cursor: 'pointer',
-        flexShrink: 0,
-    },
-    error: { color: '#c0392b', fontSize: '0.9rem' },
 };
 
 /**
@@ -58,14 +47,14 @@ export function AuthBar() {
             <LanguageSwitcher />
             <button
                 type="button"
-                style={styles.button}
+                className="btn btn-primary"
                 onClick={connect}
                 disabled={connecting}
             >
                 {connecting ? t('auth.connecting') : t('auth.connect')}
             </button>
             {status === 'error' && error !== null ? (
-                <span style={styles.error} role="alert">
+                <span className="error" role="alert">
                     {error}
                 </span>
             ) : null}
