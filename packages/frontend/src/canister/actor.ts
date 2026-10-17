@@ -1,4 +1,4 @@
-import { Actor, HttpAgent } from '@dfinity/agent';
+import { Actor, AnonymousIdentity, HttpAgent } from '@dfinity/agent';
 import type { Identity } from '@dfinity/agent';
 
 import { APP_CANISTER_ID, IC_HOST, IS_LOCAL } from './config';
@@ -32,4 +32,14 @@ export async function createCanisterActor(
         agent,
         canisterId: APP_CANISTER_ID,
     });
+}
+
+/**
+ * Query-only actor for public reads — the tip feed and tip jar pages, which
+ * must render while logged out. Never use it for `tip` / `deposit` /
+ * `withdraw`: those act on the caller's own balance and the canister rejects
+ * anonymous callers.
+ */
+export function createAnonymousActor(): Promise<CanisterActor> {
+    return createCanisterActor(new AnonymousIdentity());
 }

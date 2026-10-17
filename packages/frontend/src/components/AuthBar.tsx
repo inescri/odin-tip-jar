@@ -1,14 +1,7 @@
 import { useTranslation } from 'react-i18next';
 
 import { useOdinConnect } from '../odin/useOdinConnect';
-
-/** Shorten a principal for display: `abcde-…-xyz12`. */
-function shortPrincipal(principal: string): string {
-    if (principal.length <= 16) {
-        return principal;
-    }
-    return `${principal.slice(0, 6)}…${principal.slice(-5)}`;
-}
+import { shortPrincipal } from '../lib/jar';
 
 const styles: Record<string, React.CSSProperties> = {
     bar: {

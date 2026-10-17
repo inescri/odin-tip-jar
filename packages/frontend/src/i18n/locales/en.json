@@ -1,8 +1,8 @@
 {
     "app": {
-        "title": "odin-app-template",
-        "intro": "Reference canister app for building on Odin Fun. Auth is wired up with Odin Connect — deposit/withdraw flows and the multi-token ledger UI land in later subtasks.",
-        "connectPrompt": "Connect with Odin to deposit, withdraw and view your balances."
+        "title": "Odin Tip Jar",
+        "intro": "Tip any Odin user straight from your internal balance — instant and fee-free. Deposit tokens once, share your jar link, and watch the tips roll in.",
+        "connectPrompt": "Connect with Odin to deposit, tip and withdraw."
     },
     "auth": {
         "restoring": "Restoring session…",
@@ -15,6 +15,48 @@
         "label": "Language",
         "en": "EN",
         "zh": "中文"
+    },
+    "jar": {
+        "heading": "Your tip jar",
+        "linkLabel": "Share this link to receive tips",
+        "copy": "Copy link",
+        "copied": "Copied!",
+        "open": "Open",
+        "back": "← Back to home",
+        "title": "{{name}}'s tip jar",
+        "receivedHeading": "Received so far",
+        "noReceived": "Nothing received yet.",
+        "ownJar": "This is your own tip jar — share the link to receive tips.",
+        "connectToTip": "Connect with Odin to leave a tip.",
+        "loadingProfile": "Loading profile…",
+        "unknownUser": "Not a known Odin user — tips still go to this principal."
+    },
+    "tip": {
+        "heading": "Send a tip",
+        "recipientLabel": "To",
+        "recipientPlaceholder": "Recipient principal",
+        "selectToken": "Select token…",
+        "amountPlaceholder": "Amount",
+        "max": "Max",
+        "submit": "Tip",
+        "sending": "Sending…",
+        "sent": "Tip sent!",
+        "noBalances": "No internal balance to tip from. Deposit some tokens first.",
+        "note": "Tips move internal balance between users inside the canister — no Odin ledger transfer, no network fee.",
+        "errors": {
+            "invalidRecipient": "Invalid recipient principal.",
+            "selfTip": "You can't tip yourself.",
+            "tipFailed": "Tip failed: {{message}}"
+        }
+    },
+    "feed": {
+        "heading": "Recent tips",
+        "empty": "No tips yet — be the first!",
+        "loading": "Loading…",
+        "when": "When",
+        "from": "From",
+        "to": "To",
+        "amount": "Amount"
     },
     "deposit": {
         "heading": "Deposit",
@@ -55,11 +97,13 @@
         "notConnected": "Not connected.",
         "selectTokenDeposit": "Select a token to deposit.",
         "selectTokenWithdraw": "Select a token to withdraw.",
+        "selectTokenTip": "Select a token to tip.",
         "invalidAmount": "Invalid amount.",
         "amountGreaterThanZero": "Amount must be greater than zero.",
         "approvalRejected": "Approval cancelled or rejected.",
         "canisterUnavailableDeposit": "Canister unavailable — reconnect to enable deposits.",
         "canisterUnavailableWithdraw": "Canister unavailable — reconnect to enable withdrawals.",
+        "canisterUnavailableTip": "Canister unavailable — reconnect to enable tipping.",
         "tokenInfoLoading": "Token info still loading — try again in a moment.",
         "insufficientBalance": "Insufficient internal balance.",
         "unexpected": "Unexpected error",
