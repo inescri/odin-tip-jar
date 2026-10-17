@@ -1,4 +1,4 @@
-# AI_INSTRUCTIONS — `@odin-app/frontend`
+# AI_INSTRUCTIONS — `@odin-tip-jar/frontend`
 
 Rules for working inside the frontend package. Read alongside the root
 [`CLAUDE.md`](../../CLAUDE.md).
@@ -61,9 +61,9 @@ dfx `frontend` asset canister serves.
 ## Build & test
 
 ```sh
-pnpm --filter @odin-app/frontend dev      # local dev server
-pnpm --filter @odin-app/frontend build    # tsc -b && vite build → dist/
-pnpm --filter @odin-app/frontend typecheck
+pnpm --filter @odin-tip-jar/frontend dev      # local dev server
+pnpm --filter @odin-tip-jar/frontend build    # tsc -b && vite build → dist/
+pnpm --filter @odin-tip-jar/frontend typecheck
 ```
 
 Keep `pnpm build:frontend` and `pnpm typecheck` green — CI runs both.

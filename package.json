@@ -1,8 +1,8 @@
 {
-  "name": "odin-app-template",
+  "name": "odin-tip-jar",
   "version": "0.0.0",
   "private": true,
-  "description": "Reference canister app template for building on Odin Fun",
+  "description": "Odin Tip Jar — fee-free tipping between Odin users, built on odin-app-template",
   "packageManager": "pnpm@10.33.0",
   "engines": {
     "node": ">=22"
@@ -13,8 +13,8 @@
   "scripts": {
     "build": "pnpm build:frontend && pnpm build:canister",
     "build:canister": "dfx build canister --check",
-    "build:frontend": "pnpm --filter @odin-app/frontend build",
-    "dev:frontend": "pnpm --filter @odin-app/frontend dev",
+    "build:frontend": "pnpm --filter @odin-tip-jar/frontend build",
+    "dev:frontend": "pnpm --filter @odin-tip-jar/frontend dev",
     "test": "pnpm -r test",
     "typecheck": "pnpm -r typecheck"
   }

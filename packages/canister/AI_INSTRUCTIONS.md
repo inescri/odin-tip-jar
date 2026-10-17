@@ -1,4 +1,4 @@
-# AI_INSTRUCTIONS — `@odin-app/canister`
+# AI_INSTRUCTIONS — `@odin-tip-jar/canister`
 
 Rules for working inside the Azle canister package. Read alongside the root
 [`CLAUDE.md`](../../CLAUDE.md).
@@ -50,7 +50,7 @@ src/
 ## Build & test
 
 ```sh
-pnpm --filter @odin-app/canister test          # vitest
+pnpm --filter @odin-tip-jar/canister test          # vitest
 dfx build canister --check                      # compile to wasm (run from repo root)
 ```
 

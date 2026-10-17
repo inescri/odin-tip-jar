@@ -32,7 +32,7 @@ export function parseOdinEnv(raw: string | undefined): OdinEnv {
  * App name + environment shown on the Odin approval page. Configurable via
  * Vite env vars so a fork can point at dev/local without code changes.
  */
-const APP_NAME = import.meta.env.VITE_ODIN_APP_NAME ?? 'Odin App Template';
+const APP_NAME = import.meta.env.VITE_ODIN_APP_NAME ?? 'Odin Tip Jar';
 const APP_ENV = parseOdinEnv(import.meta.env.VITE_ODIN_ENV);
 
 /**

@@ -143,7 +143,7 @@ dfx deploy            # build + deploy canister and frontend
 > If `pnpm install` ran before `dfx` was installed, register the azle dfx extension manually:
 >
 > ```sh
-> pnpm --filter @odin-app/canister exec azle extension install
+> pnpm --filter @odin-tip-jar/canister exec azle extension install
 > ```
 
 Frontend dev server:

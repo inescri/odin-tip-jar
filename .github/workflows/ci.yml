@@ -35,7 +35,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Install Azle dfx extension
-        run: pnpm --filter @odin-app/canister exec azle extension install
+        run: pnpm --filter @odin-tip-jar/canister exec azle extension install
 
       - name: Type-check
         run: pnpm typecheck
