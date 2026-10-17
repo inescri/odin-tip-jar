@@ -3,16 +3,16 @@ import { useTranslation } from 'react-i18next';
 
 import { useOdinConnect } from '../odin/useOdinConnect';
 import { useOdinProfile } from '../odin/useOdinProfile';
-import { tokenPlaces, useTokenMeta } from '../odin/useTokenMeta';
+import { useTokenMeta } from '../odin/useTokenMeta';
 import { useAnonymousActor } from '../canister/useAnonymousActor';
 import { useCanisterActor } from '../canister/useCanisterActor';
 import { useInternalBalances } from '../canister/useInternalBalances';
 import { useReceivedTotals, useRecentTips } from '../canister/useTips';
-import { formatTokenAmount } from '../lib/amounts';
 import { shortPrincipal } from '../lib/jar';
 import { JarLinkCard } from './JarLinkCard';
 import { TipFeed } from './TipFeed';
 import { TipForm } from './TipForm';
+import { TokenAmountList } from './TokenAmountList';
 
 interface TipJarPageProps {
     /** Validated, non-anonymous principal from `?jar=`. */
@@ -41,7 +41,6 @@ const styles: Record<string, React.CSSProperties> = {
         color: 'var(--muted)',
         wordBreak: 'break-all',
     },
-    totals: { listStyle: 'none', padding: 0, margin: 0 },
     note: { margin: 0 },
 };
 
@@ -122,7 +121,7 @@ export function TipJarPage({ recipient }: TipJarPageProps) {
                     <TipFeed tips={feed.tips} loading={feed.loading} error={feed.error} hideTo />
                 </div>
                 <aside className="layout-sidebar">
-                    <section className="card">
+                    <section className="card sidebar-lead">
                         <h2>{t('jar.receivedHeading')}</h2>
                         {totalsState.error !== null ? (
                             <p className="error" style={styles.note} role="alert">
@@ -133,19 +132,7 @@ export function TipJarPage({ recipient }: TipJarPageProps) {
                                 {totalsState.loading ? t('feed.loading') : t('jar.noReceived')}
                             </p>
                         ) : (
-                            <ul style={styles.totals}>
-                                {totalsState.totals.map((b) => {
-                                    const m = meta.get(b.token);
-                                    return (
-                                        <li key={b.token} className="balances-total">
-                                            <span className="balances-ticker">{m?.ticker ?? b.token}</span>
-                                            <span className="balances-amount">
-                                                {formatTokenAmount(b.amount, tokenPlaces(m))}
-                                            </span>
-                                        </li>
-                                    );
-                                })}
-                            </ul>
+                            <TokenAmountList items={totalsState.totals} meta={meta} />
                         )}
                     </section>
                 </aside>

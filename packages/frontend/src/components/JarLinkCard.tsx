@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { buildJarPath, buildJarUrl } from '../lib/jar';
+import { useCopyToClipboard } from '../lib/useCopyToClipboard';
 
 interface JarLinkCardProps {
     principal: string;
@@ -19,27 +20,12 @@ const styles: Record<string, React.CSSProperties> = {
 export function JarLinkCard({ principal }: JarLinkCardProps) {
     const { t } = useTranslation();
     const url = buildJarUrl(window.location.origin, principal);
-    const [copied, setCopied] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    useEffect(() => {
-        if (!copied) {
-            return;
-        }
-        const timer = window.setTimeout(() => setCopied(false), 2000);
-        return () => window.clearTimeout(timer);
-    }, [copied]);
-
-    const copy = useCallback(async () => {
-        try {
-            await navigator.clipboard.writeText(url);
-            setCopied(true);
-        } catch {
-            // Clipboard API unavailable (insecure context / permission): fall
-            // back to selecting the text so the user can copy manually.
-            inputRef.current?.select();
-        }
-    }, [url]);
+    // Clipboard API unavailable (insecure context / permission): fall back to
+    // selecting the text so the user can copy manually.
+    const selectInput = useCallback(() => inputRef.current?.select(), []);
+    const { copied, copy } = useCopyToClipboard(url, selectInput);
 
     return (
         <section className="card" style={styles.card}>

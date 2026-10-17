@@ -244,7 +244,8 @@ export function TipForm({ actor, balances, recipient, onTipped, bare = false }: 
                 <div className="ok" style={styles.message}>{t('tip.sent')}</div>
             ) : null}
 
-            {balances.length === 0 ? (
+            {/* Bare (in the tabs) the balances sidebar owns this message. */}
+            {balances.length === 0 && !bare ? (
                 <p className="note" style={styles.note}>{t('tip.noBalances')}</p>
             ) : null}
         </section>

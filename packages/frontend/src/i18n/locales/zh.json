@@ -14,6 +14,7 @@
     "account": {
         "menu": "账户菜单",
         "copyPrincipal": "复制 principal ID",
+        "copyFailed": "复制失败——请从提示中选取 ID",
         "copied": "已复制！",
         "language": "语言",
         "myJar": "我的打赏罐"
@@ -45,6 +46,7 @@
         "withdraw": "提现"
     },
     "balances": {
+        "error": "无法加载余额：{{error}}",
         "heading": "内部余额",
         "empty": "暂无内部余额——先充值开始吧。",
         "refresh": "刷新"

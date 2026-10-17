@@ -17,8 +17,9 @@ const styles: Record<string, React.CSSProperties> = {
 /**
  * Connect/account control. Renders the right affordance for each auth state:
  * a loading hint while restoring, a Connect button when disconnected (or after
- * an error, with the error shown, plus the language picker), and the account
- * pill (identity, copy, settings menu) once authenticated.
+ * an error, with the error shown), and the account pill (identity, copy,
+ * settings menu) once authenticated. The language picker sits in the bar
+ * until the account menu takes it over.
  */
 export function AuthBar() {
     const { t } = useTranslation();
@@ -26,7 +27,12 @@ export function AuthBar() {
         useOdinConnect();
 
     if (status === 'restoring') {
-        return <div style={styles.bar}>{t('auth.restoring')}</div>;
+        return (
+            <div style={styles.bar}>
+                <LanguageSwitcher />
+                {t('auth.restoring')}
+            </div>
+        );
     }
 
     if (status === 'connected' && principal !== null && user !== null) {

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import { useOdinConnect } from '../odin/useOdinConnect';
-import { parseApprovalReturnState } from '../odin/approvalFlow';
+import { approvalFor } from '../odin/approvalFlow';
 import type { CanisterActor } from '../canister/idl';
 import type { InternalBalance } from '../canister/useInternalBalances';
 import { DepositForm } from './DepositForm';
@@ -12,6 +12,14 @@ import { WithdrawForm } from './WithdrawForm';
 type Tab = 'tip' | 'deposit' | 'withdraw';
 
 const TABS: readonly Tab[] = ['tip', 'deposit', 'withdraw'];
+
+/**
+ * Approval request ids whose tab has already been brought forward during this
+ * page load. Module scope so a remounted ActionTabs does not yank the user back
+ * to a deposit/withdraw that has already settled (the SDK keeps the latest
+ * request in state after it finishes).
+ */
+const surfacedRequests = new Set<string>();
 
 const LABEL_KEYS = {
     tip: 'tabs.send',
@@ -41,16 +49,15 @@ export function ActionTabs({ actor, balances, refresh, onTipped }: ActionTabsPro
     const tabRefs = useRef<Partial<Record<Tab, HTMLButtonElement | null>>>({});
 
     // Bring the owning tab forward when a deposit/withdraw approval starts or
-    // returns from a redirect, so its progress and result are visible. Keyed
-    // on the request id: status changes of the same request do not re-run
-    // it, so the user can still switch away while waiting.
-    const requestId = request?.id ?? null;
-    const approvalFlow =
-        request?.action === 'icrc_approve'
-            ? (parseApprovalReturnState(request.returnState)?.flow ?? null)
-            : null;
+    // returns from a redirect, so its progress and result are visible. Once
+    // per request id: status changes of the same request (and remounts) do
+    // not re-run it, so the user can still switch away while waiting.
+    const approval = approvalFor(request, 'deposit') ?? approvalFor(request, 'withdraw');
+    const requestId = approval?.request.id ?? null;
+    const approvalFlow = approval?.returnState.flow ?? null;
     useEffect(() => {
-        if (approvalFlow !== null) {
+        if (requestId !== null && approvalFlow !== null && !surfacedRequests.has(requestId)) {
+            surfacedRequests.add(requestId);
             setActive(approvalFlow);
         }
     }, [requestId, approvalFlow]);

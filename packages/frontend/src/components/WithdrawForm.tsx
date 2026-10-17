@@ -387,7 +387,8 @@ export function WithdrawForm({ actor, balances, refresh, bare = false }: Withdra
                 <div className="ok" style={styles.message}>{t('withdraw.sent')}</div>
             ) : null}
 
-            {balances.length === 0 ? (
+            {/* Bare (in the tabs) the balances sidebar owns this message. */}
+            {balances.length === 0 && !bare ? (
                 <p className="note" style={styles.note}>{t('withdraw.noBalances')}</p>
             ) : null}
         </section>

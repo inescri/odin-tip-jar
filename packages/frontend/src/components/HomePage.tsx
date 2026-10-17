@@ -23,7 +23,7 @@ export function HomePage() {
     // Internal balances live here so deposit, withdraw and tip share one
     // source of truth — any refresh updates every selector.
     const actor = useCanisterActor();
-    const { balances, loading, refresh } = useInternalBalances(actor);
+    const { balances, loading, loaded, error, refresh } = useInternalBalances(actor);
 
     // The feed is public: read through the anonymous actor so it renders
     // before (and without) a login.
@@ -49,7 +49,13 @@ export function HomePage() {
                         />
                     </div>
                     <aside className="layout-sidebar">
-                        <BalancesWidget balances={balances} loading={loading} onRefresh={refresh} />
+                        <BalancesWidget
+                            balances={balances}
+                            loading={loading}
+                            loaded={loaded}
+                            error={error}
+                            onRefresh={refresh}
+                        />
                         <JarLinkCard principal={principal} />
                     </aside>
                 </div>

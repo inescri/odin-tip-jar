@@ -2,12 +2,15 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 
 import type { InternalBalance } from '../canister/useInternalBalances';
-import { tokenPlaces, useTokenMeta } from '../odin/useTokenMeta';
-import { formatTokenAmount } from '../lib/amounts';
+import { useTokenMeta } from '../odin/useTokenMeta';
+import { TokenAmountList } from './TokenAmountList';
 
 interface BalancesWidgetProps {
     balances: InternalBalance[];
     loading: boolean;
+    /** False until the first successful fetch; until then "empty" is unknown. */
+    loaded: boolean;
+    error: string | null;
     onRefresh: () => void | Promise<void>;
 }
 
@@ -20,8 +23,8 @@ const styles: Record<string, React.CSSProperties> = {
         marginBottom: '0.5rem',
     },
     heading: { margin: 0 },
-    list: { listStyle: 'none', padding: 0, margin: 0 },
     note: { margin: 0 },
+    error: { margin: '0 0 0.5rem' },
 };
 
 /**
@@ -29,13 +32,13 @@ const styles: Record<string, React.CSSProperties> = {
  * they can tip or withdraw. Read-only; HomePage owns the balance state so this
  * updates whenever a tip, deposit or withdraw refreshes it.
  */
-export function BalancesWidget({ balances, loading, onRefresh }: BalancesWidgetProps) {
+export function BalancesWidget({ balances, loading, loaded, error, onRefresh }: BalancesWidgetProps) {
     const { t } = useTranslation();
     const tokenIds = useMemo(() => balances.map((b) => b.token), [balances]);
     const meta = useTokenMeta(tokenIds);
 
     return (
-        <section className="card balances-card" aria-labelledby="balances-heading">
+        <section className="card sidebar-lead" aria-labelledby="balances-heading">
             <div style={styles.head}>
                 <h2 id="balances-heading" style={styles.heading}>
                     {t('balances.heading')}
@@ -50,23 +53,20 @@ export function BalancesWidget({ balances, loading, onRefresh }: BalancesWidgetP
                 </button>
             </div>
 
-            {balances.length === 0 ? (
-                <p className="note" style={styles.note}>{loading ? t('feed.loading') : t('balances.empty')}</p>
-            ) : (
-                <ul style={styles.list}>
-                    {balances.map((b) => {
-                        const m = meta.get(b.token);
-                        return (
-                            <li key={b.token} className="balances-total">
-                                <span className="balances-ticker">{m?.ticker ?? b.token}</span>
-                                <span className="balances-amount">
-                                    {formatTokenAmount(b.amount, tokenPlaces(m))}
-                                </span>
-                            </li>
-                        );
-                    })}
-                </ul>
-            )}
+            {error !== null ? (
+                <p className="error" style={styles.error} role="alert">
+                    {t('balances.error', { error })}
+                </p>
+            ) : null}
+
+            {balances.length > 0 ? (
+                <TokenAmountList items={balances} meta={meta} />
+            ) : loaded ? (
+                <p className="note" style={styles.note}>{t('balances.empty')}</p>
+            ) : error === null ? (
+                // Not fetched yet (actor still resolving or first read in flight).
+                <p className="note" style={styles.note}>{t('feed.loading')}</p>
+            ) : null}
         </section>
     );
 }

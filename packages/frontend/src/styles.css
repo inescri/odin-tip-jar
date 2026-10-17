@@ -318,13 +318,14 @@ select.field {
         grid-template-columns: minmax(0, 1fr);
     }
 
-    /* Flatten the sidebar into the grid so only the balances jump above
-       the action panel; the jar link and totals follow it. */
+    /* Flatten the sidebar into the grid so only the lead card (balances
+       on Home, received totals on a jar) jumps above the main column;
+       the rest of the sidebar follows it. */
     .layout-sidebar {
         display: contents;
     }
 
-    .balances-card {
+    .sidebar-lead {
         order: -1;
     }
 }

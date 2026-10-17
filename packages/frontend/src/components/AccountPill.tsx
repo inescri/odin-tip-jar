@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { OdinConnectedUser, OdinUser } from 'odin-connect';
 
 import { SUPPORTED_LOCALES } from '../i18n';
 import { buildJarPath, shortPrincipal } from '../lib/jar';
+import { useCopyToClipboard } from '../lib/useCopyToClipboard';
 
 interface AccountPillProps {
     principal: string;
@@ -41,25 +42,57 @@ function ChevronIcon() {
  * Connected account control: avatar + handle + short principal in one pill,
  * a copy-principal button, and a dropdown with language, a link to the
  * user's own jar, and Disconnect. The menu closes on outside click, Escape,
- * or after any selection.
+ * or after any selection. Opening it moves focus to the first item; arrow
+ * keys / Home / End move between items, and Escape returns focus to
+ * whichever trigger opened it.
  */
 export function AccountPill({ principal, profile, user, onDisconnect }: AccountPillProps) {
     const { t, i18n } = useTranslation();
     const [open, setOpen] = useState(false);
-    const [copied, setCopied] = useState(false);
+    const { copied, failed, copy } = useCopyToClipboard(principal);
     const rootRef = useRef<HTMLDivElement>(null);
-    const toggleRef = useRef<HTMLButtonElement>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const triggerRef = useRef<HTMLButtonElement | null>(null);
 
     const name = profile?.username ?? t('auth.connected');
     const initial = (profile?.username ?? '?').slice(0, 1).toUpperCase();
 
+    const toggle = (e: React.MouseEvent<HTMLButtonElement>) => {
+        triggerRef.current = e.currentTarget;
+        setOpen((v) => !v);
+    };
+
+    const menuItems = (): HTMLElement[] =>
+        Array.from(menuRef.current?.querySelectorAll<HTMLElement>('[role^="menuitem"]') ?? []);
+
+    // Move focus into the menu when it opens (WAI-ARIA menu button pattern).
     useEffect(() => {
-        if (!copied) {
-            return;
+        if (open) {
+            menuItems()[0]?.focus();
         }
-        const timer = window.setTimeout(() => setCopied(false), 1500);
-        return () => window.clearTimeout(timer);
-    }, [copied]);
+    }, [open]);
+
+    const onMenuKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+        const items = menuItems();
+        const index = items.indexOf(document.activeElement as HTMLElement);
+        let next: number | null = null;
+        if (e.key === 'ArrowDown') {
+            next = (index + 1) % items.length;
+        } else if (e.key === 'ArrowUp') {
+            next = (index - 1 + items.length) % items.length;
+        } else if (e.key === 'Home') {
+            next = 0;
+        } else if (e.key === 'End') {
+            next = items.length - 1;
+        } else if (e.key === 'Tab') {
+            // Tabbing out of a menu closes it.
+            setOpen(false);
+        }
+        if (next !== null) {
+            e.preventDefault();
+            items[next]?.focus();
+        }
+    };
 
     useEffect(() => {
         if (!open) {
@@ -73,7 +106,7 @@ export function AccountPill({ principal, profile, user, onDisconnect }: AccountP
         const onKey = (e: KeyboardEvent) => {
             if (e.key === 'Escape') {
                 setOpen(false);
-                toggleRef.current?.focus();
+                triggerRef.current?.focus();
             }
         };
         document.addEventListener('pointerdown', onPointer);
@@ -84,15 +117,13 @@ export function AccountPill({ principal, profile, user, onDisconnect }: AccountP
         };
     }, [open]);
 
-    const copy = useCallback(async () => {
-        try {
-            await navigator.clipboard.writeText(principal);
-            setCopied(true);
-        } catch {
-            // Clipboard API unavailable (insecure context / permission); the
-            // full principal is still in the pill's tooltip.
-        }
-    }, [principal]);
+    // Clipboard failure (insecure context / permission) is shown on the copy
+    // button; the full principal stays available in the pill's tooltip.
+    const copyLabel = copied
+        ? t('account.copied')
+        : failed
+          ? t('account.copyFailed')
+          : t('account.copyPrincipal');
 
     return (
         <div className="account" ref={rootRef}>
@@ -100,7 +131,7 @@ export function AccountPill({ principal, profile, user, onDisconnect }: AccountP
                 <button
                     type="button"
                     className="pill-main"
-                    onClick={() => setOpen((v) => !v)}
+                    onClick={toggle}
                     aria-haspopup="menu"
                     aria-expanded={open}
                     title={principal}
@@ -126,17 +157,16 @@ export function AccountPill({ principal, profile, user, onDisconnect }: AccountP
                     type="button"
                     className="icon-button"
                     onClick={() => void copy()}
-                    aria-label={copied ? t('account.copied') : t('account.copyPrincipal')}
-                    title={copied ? t('account.copied') : t('account.copyPrincipal')}
+                    aria-label={copyLabel}
+                    title={copyLabel}
                     data-copied={copied}
                 >
                     {copied ? <CheckIcon /> : <CopyIcon />}
                 </button>
                 <button
-                    ref={toggleRef}
                     type="button"
                     className="icon-button"
-                    onClick={() => setOpen((v) => !v)}
+                    onClick={toggle}
                     aria-haspopup="menu"
                     aria-expanded={open}
                     aria-label={t('account.menu')}
@@ -146,7 +176,13 @@ export function AccountPill({ principal, profile, user, onDisconnect }: AccountP
             </div>
 
             {open ? (
-                <div className="menu" role="menu" aria-label={t('account.menu')}>
+                <div
+                    ref={menuRef}
+                    className="menu"
+                    role="menu"
+                    aria-label={t('account.menu')}
+                    onKeyDown={onMenuKeyDown}
+                >
                     <div className="menu-label">{t('account.language')}</div>
                     {SUPPORTED_LOCALES.map((locale) => {
                         const active = i18n.resolvedLanguage === locale;
