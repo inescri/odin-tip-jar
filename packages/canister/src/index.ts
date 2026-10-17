@@ -48,8 +48,8 @@ const TRUSTED_ORIGINS: string[] = [
     'http://localhost:5173',
     // Local dev — Vite dev server (fallback port when 5173 is taken).
     'http://localhost:5174',
-    // Production — add your deployed frontend origin here, e.g.
-    // 'https://odin-tip-jar.netlify.app',
+    // Production — the Netlify-hosted frontend.
+    'https://tip-jar-o24.netlify.app',
 ];
 
 /**
