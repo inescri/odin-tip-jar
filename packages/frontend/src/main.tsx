@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { App } from './App.tsx';
 import { OdinConnectProvider } from './odin/OdinConnectProvider';
 import './i18n';
+import './styles.css';
 
 const root = document.getElementById('root');
 if (!root) {

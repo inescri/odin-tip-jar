@@ -3,16 +3,16 @@ import { useTranslation } from 'react-i18next';
 
 import { useOdinConnect } from '../odin/useOdinConnect';
 import { useOdinProfile } from '../odin/useOdinProfile';
-import { tokenPlaces, useTokenMeta } from '../odin/useTokenMeta';
+import { useTokenMeta } from '../odin/useTokenMeta';
 import { useAnonymousActor } from '../canister/useAnonymousActor';
 import { useCanisterActor } from '../canister/useCanisterActor';
 import { useInternalBalances } from '../canister/useInternalBalances';
 import { useReceivedTotals, useRecentTips } from '../canister/useTips';
-import { formatTokenAmount } from '../lib/amounts';
 import { shortPrincipal } from '../lib/jar';
 import { JarLinkCard } from './JarLinkCard';
 import { TipFeed } from './TipFeed';
 import { TipForm } from './TipForm';
+import { TokenAmountList } from './TokenAmountList';
 
 interface TipJarPageProps {
     /** Validated, non-anonymous principal from `?jar=`. */
@@ -20,7 +20,7 @@ interface TipJarPageProps {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-    back: { display: 'inline-block', marginTop: '1rem', color: 'inherit' },
+    back: { display: 'inline-block', marginTop: '0.25rem' },
     profile: {
         display: 'flex',
         alignItems: 'center',
@@ -32,31 +32,16 @@ const styles: Record<string, React.CSSProperties> = {
         height: '64px',
         borderRadius: '50%',
         objectFit: 'cover',
-        background: '#eee',
         flexShrink: 0,
     },
     name: { margin: 0, fontSize: '1.5rem' },
     principal: {
-        fontFamily: 'ui-monospace, monospace',
-        fontSize: '0.9rem',
-        opacity: 0.7,
+        fontFamily: 'var(--font-mono)',
+        fontSize: '0.85rem',
+        color: 'var(--muted)',
         wordBreak: 'break-all',
     },
-    card: {
-        border: '1px solid #e2e2e2',
-        borderRadius: '12px',
-        padding: '1.25rem',
-        marginTop: '1.5rem',
-    },
-    totals: { listStyle: 'none', padding: 0, margin: 0 },
-    total: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        padding: '0.35rem 0',
-        borderBottom: '1px solid #f0f0f0',
-        fontVariantNumeric: 'tabular-nums',
-    },
-    note: { fontSize: '0.9rem', opacity: 0.7, margin: 0 },
+    note: { margin: 0 },
 };
 
 /**
@@ -103,61 +88,55 @@ export function TipJarPage({ recipient }: TipJarPageProps) {
 
             <div style={styles.profile}>
                 {avatarUrl !== null ? (
-                    <img src={avatarUrl} alt={displayName} style={styles.avatar} />
+                    <img src={avatarUrl} alt={displayName} className="avatar-placeholder" style={styles.avatar} />
                 ) : (
-                    <div style={styles.avatar} aria-hidden="true" />
+                    <div className="avatar-placeholder" style={styles.avatar} aria-hidden="true" />
                 )}
                 <div style={{ minWidth: 0 }}>
                     <h2 style={styles.name}>{t('jar.title', { name: displayName })}</h2>
                     <div style={styles.principal} title={recipient}>
                         {recipient}
                     </div>
-                    {notFound ? <p style={styles.note}>{t('jar.unknownUser')}</p> : null}
+                    {notFound ? <p className="note" style={styles.note}>{t('jar.unknownUser')}</p> : null}
                 </div>
             </div>
 
-            <section style={styles.card}>
-                <h2 style={{ marginTop: 0 }}>{t('jar.receivedHeading')}</h2>
-                {totalsState.error !== null ? (
-                    <p style={{ ...styles.note, color: '#c0392b' }} role="alert">
-                        {totalsState.error}
-                    </p>
-                ) : totalsState.totals.length === 0 ? (
-                    <p style={styles.note}>
-                        {totalsState.loading ? t('feed.loading') : t('jar.noReceived')}
-                    </p>
-                ) : (
-                    <ul style={styles.totals}>
-                        {totalsState.totals.map((b) => {
-                            const m = meta.get(b.token);
-                            return (
-                                <li key={b.token} style={styles.total}>
-                                    <span>{m?.ticker ?? b.token}</span>
-                                    <strong>{formatTokenAmount(b.amount, tokenPlaces(m))}</strong>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                )}
-            </section>
-
-            {isOwn ? (
-                <>
-                    <p>{t('jar.ownJar')}</p>
-                    <JarLinkCard principal={recipient} />
-                </>
-            ) : status === 'connected' ? (
-                <TipForm
-                    actor={actor}
-                    balances={balances}
-                    recipient={recipient}
-                    onTipped={onTipped}
-                />
-            ) : status === 'restoring' ? null : (
-                <p>{t('jar.connectToTip')}</p>
-            )}
-
-            <TipFeed tips={feed.tips} loading={feed.loading} error={feed.error} hideTo />
+            <div className="layout" style={{ marginTop: '1.5rem' }}>
+                <div className="layout-main">
+                    {isOwn ? (
+                        <>
+                            <p>{t('jar.ownJar')}</p>
+                            <JarLinkCard principal={recipient} />
+                        </>
+                    ) : status === 'connected' ? (
+                        <TipForm
+                            actor={actor}
+                            balances={balances}
+                            recipient={recipient}
+                            onTipped={onTipped}
+                        />
+                    ) : status === 'restoring' ? null : (
+                        <p>{t('jar.connectToTip')}</p>
+                    )}
+                    <TipFeed tips={feed.tips} loading={feed.loading} error={feed.error} hideTo />
+                </div>
+                <aside className="layout-sidebar">
+                    <section className="card sidebar-lead">
+                        <h2>{t('jar.receivedHeading')}</h2>
+                        {totalsState.error !== null ? (
+                            <p className="error" style={styles.note} role="alert">
+                                {totalsState.error}
+                            </p>
+                        ) : totalsState.totals.length === 0 ? (
+                            <p className="note" style={styles.note}>
+                                {totalsState.loading ? t('feed.loading') : t('jar.noReceived')}
+                            </p>
+                        ) : (
+                            <TokenAmountList items={totalsState.totals} meta={meta} />
+                        )}
+                    </section>
+                </aside>
+            </div>
         </>
     );
 }

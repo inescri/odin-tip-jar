@@ -1,0 +1,621 @@
+/*
+ * App theme, layout and interactive chrome.
+ *
+ * The palette, radii and control shapes follow odin.fun's design system
+ * (shadcn/ui tokens, dark mode) so the tip jar feels native next to Odin.
+ * Components use these classes / variables; inline styles only carry layout.
+ */
+
+/* Work Sans variable font, self-hosted (OFL) — same files Odin ships. */
+@font-face {
+    font-family: 'Work Sans';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/fonts/work-sans-latin-wght-normal.woff2') format('woff2');
+    unicode-range:
+        U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC,
+        U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193,
+        U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+    font-family: 'Work Sans';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/fonts/work-sans-latin-ext-wght-normal.woff2') format('woff2');
+    unicode-range:
+        U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304,
+        U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020,
+        U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+:root {
+    /* Surfaces */
+    --bg: #121218;
+    --surface: #09090b;
+    --surface-raised: #373748;
+    --surface-hover: #27272a;
+    --secondary-bg: #3c3c4e;
+
+    /* Lines */
+    --border: #27272a;
+    --card-border: #2b2e3b;
+
+    /* Text */
+    --text: #ffffff;
+    --muted: #a1a1aa;
+
+    /* Brand + status */
+    --accent: #00ffff;
+    --accent-hover: #0bc1c1;
+    --accent-soft: rgba(0, 255, 255, 0.35);
+    --on-accent: #18181b;
+    --success: #22c55e;
+    --danger: #f05252;
+    --ring: #d4d4d8;
+    --btc: #f7931a;
+
+    --radius-sm: 6px;
+    --radius: 8px;
+    --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+    --font: 'Work Sans', ui-sans-serif, system-ui, 'PingFang SC', 'Hiragino Sans GB',
+        'Microsoft YaHei', 'Noto Sans CJK SC', sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    color-scheme: dark;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--surface-hover);
+    border-radius: 8px;
+}
+
+a {
+    color: var(--accent);
+}
+
+code {
+    font-family: var(--font-mono);
+    color: var(--text);
+}
+
+.app {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.5rem 2rem 3rem;
+    box-sizing: border-box;
+}
+
+.app-header {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.app-header h1 {
+    margin: 0;
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+.app-header h1 a {
+    color: var(--text);
+    text-decoration: none;
+}
+
+.header-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    margin-left: auto;
+}
+
+h2 {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+}
+
+/* ── Primitives (mirror Odin's shadcn button / card / input) ── */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 36px;
+    padding: 0 1rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 700;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-sizing: border-box;
+    transition: background-color 0.1s, border-color 0.1s, color 0.1s;
+}
+
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    background: var(--accent);
+    color: var(--on-accent);
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+}
+
+.btn-secondary {
+    background: var(--secondary-bg);
+    color: var(--text);
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--surface-raised);
+}
+
+.btn-outline {
+    background: transparent;
+    border-color: var(--border);
+    color: var(--text);
+    font-weight: 500;
+}
+
+.btn-outline:hover:not(:disabled) {
+    background: var(--surface-hover);
+}
+
+.btn-sm {
+    height: 30px;
+    padding: 0 0.75rem;
+    font-size: 0.75rem;
+}
+
+.card {
+    background: var(--surface);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+}
+
+.card h2 {
+    margin-top: 0;
+    font-size: 1.25rem;
+}
+
+.field {
+    height: 40px;
+    padding: 0 1rem;
+    background: var(--surface-raised);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text);
+    font: inherit;
+    font-size: 0.875rem;
+    box-sizing: border-box;
+    min-width: 0;
+}
+
+select.field {
+    padding-right: 0.5rem;
+    cursor: pointer;
+}
+
+.field-sm {
+    height: 36px;
+    padding: 0 0.6rem;
+    background: transparent;
+}
+
+.field::placeholder {
+    color: var(--muted);
+}
+
+.field:disabled {
+    opacity: 0.5;
+}
+
+.btn:focus-visible,
+.field:focus-visible,
+.tab:focus-visible,
+.icon-button:focus-visible,
+.pill-main:focus-visible,
+.menu-item:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 1px;
+}
+
+.note {
+    font-size: 0.8rem;
+    color: var(--muted);
+    line-height: 1.5;
+}
+
+.error {
+    color: var(--danger);
+    font-size: 0.875rem;
+}
+
+.ok {
+    color: var(--success);
+    font-size: 0.875rem;
+}
+
+.mono {
+    font-family: var(--font-mono);
+}
+
+/* ── Two-column layout: main + right sidebar ── */
+
+.layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.layout-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+}
+
+.layout-sidebar h2 {
+    font-size: 1.05rem;
+}
+
+.layout-main {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+}
+
+.layout-main > p {
+    margin: 0;
+}
+
+/* Cards rendered inside the layout own their spacing via the grid gap. */
+.layout section {
+    margin-top: 0 !important;
+}
+
+@media (max-width: 899px) {
+    .layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    /* Flatten the sidebar into the grid so only the lead card (balances
+       on Home, received totals on a jar) jumps above the main column;
+       the rest of the sidebar follows it. */
+    .layout-sidebar {
+        display: contents;
+    }
+
+    .sidebar-lead {
+        order: -1;
+    }
+}
+
+@media (max-width: 599px) {
+    .app {
+        padding: 1rem 1rem 2rem;
+    }
+
+    .card,
+    .panel-body {
+        padding: 1.1rem;
+    }
+}
+
+/* ── Tabbed action panel ── */
+
+.panel {
+    background: var(--surface);
+    border: 1px solid var(--card-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.panel-body {
+    padding: 1.5rem;
+}
+
+.tabs {
+    display: flex;
+    gap: 1.5rem;
+    padding: 0 1.5rem;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+}
+
+.tab {
+    height: 44px;
+    padding: 0;
+    border: none;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--muted);
+    font: inherit;
+    font-size: 0.875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.tab:hover {
+    color: var(--text);
+}
+
+.tab[aria-selected='true'] {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+}
+
+/* ── Balances widget ── */
+
+.balances-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 0.75rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border);
+    font-variant-numeric: tabular-nums;
+}
+
+.balances-total:last-child {
+    border-bottom: none;
+}
+
+.balances-ticker {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.balances-amount {
+    font-weight: 700;
+    font-size: 1.1rem;
+    word-break: break-all;
+    text-align: right;
+}
+
+/* ── Account pill + dropdown ── */
+
+.account {
+    position: relative;
+}
+
+.account-pill {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem;
+    border: 1px solid var(--card-border);
+    border-radius: 999px;
+    background: var(--surface);
+    max-width: 100%;
+}
+
+.pill-main {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    padding: 0 0.4rem 0 0;
+    border: none;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    border-radius: 999px;
+}
+
+.pill-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--surface-raised);
+    color: var(--accent);
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.pill-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    min-width: 0;
+}
+
+.pill-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 16ch;
+}
+
+.pill-principal {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.icon-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.icon-button:hover {
+    background: var(--surface-hover);
+    color: var(--text);
+}
+
+.icon-button[data-copied='true'] {
+    color: var(--success);
+}
+
+.menu {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 10;
+    min-width: 220px;
+    padding: 0.25rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    box-shadow: var(--shadow);
+}
+
+.menu-label {
+    padding: 0.4rem 0.5rem 0.2rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.4rem 0.5rem;
+    border: none;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    font-size: 0.875rem;
+    text-align: left;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    background: var(--surface-hover);
+}
+
+.menu-item[aria-checked='true'] {
+    font-weight: 600;
+    color: var(--accent);
+}
+
+.menu-item.danger {
+    color: var(--danger);
+}
+
+.menu-divider {
+    height: 1px;
+    margin: 0.25rem -0.25rem;
+    background: var(--border);
+}
+
+/* ── Tip feed table ── */
+
+.feed-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.feed-table th {
+    text-align: left;
+    padding: 0.5rem 0.6rem;
+    border-bottom: 1px solid var(--border);
+    font-weight: 700;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.feed-table td {
+    padding: 0.6rem;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+}
+
+.feed-table tbody tr:hover {
+    background: var(--surface-hover);
+}
+
+.feed-table a {
+    font-family: var(--font-mono);
+    color: var(--accent);
+    text-decoration: none;
+}
+
+.feed-table a:hover {
+    text-decoration: underline;
+}
+
+/* Locked recipient on the tip jar page's tip form. */
+.chip {
+    display: inline-block;
+    padding: 0.4rem 0.6rem;
+    border-radius: var(--radius-sm);
+    background: var(--surface-raised);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+}
+
+.avatar-placeholder {
+    background: var(--surface-raised);
+}

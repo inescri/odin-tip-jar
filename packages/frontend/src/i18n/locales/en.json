@@ -11,6 +11,14 @@
         "connected": "Connected",
         "disconnect": "Disconnect"
     },
+    "account": {
+        "menu": "Account menu",
+        "copyPrincipal": "Copy principal ID",
+        "copyFailed": "Copy failed — select the ID from the tooltip",
+        "copied": "Copied!",
+        "language": "Language",
+        "myJar": "My tip jar"
+    },
     "language": {
         "label": "Language",
         "en": "EN",
@@ -30,6 +38,18 @@
         "connectToTip": "Connect with Odin to leave a tip.",
         "loadingProfile": "Loading profile…",
         "unknownUser": "Not a known Odin user — tips still go to this principal."
+    },
+    "tabs": {
+        "label": "Actions",
+        "send": "Send Tip",
+        "deposit": "Deposit",
+        "withdraw": "Withdraw"
+    },
+    "balances": {
+        "error": "Could not load balances: {{error}}",
+        "heading": "Internal balances",
+        "empty": "No internal balances yet — deposit to start.",
+        "refresh": "Refresh"
     },
     "tip": {
         "heading": "Send a tip",
@@ -66,8 +86,6 @@
         "awaitingApproval": "Awaiting approval…",
         "crediting": "Crediting…",
         "credited": "Deposit credited.",
-        "balancesHeading": "Internal balances",
-        "noBalances": "No internal balances yet.",
         "note": "Note: <0>deposit</0> pulls the approved funds via <1>icrc2_transfer_from</1> and credits your balance in one call — the credit is backed by tokens the canister actually moved, so no trusted minter is required.",
         "errors": {
             "loadTokens": "Failed to load tokens: {{message}}",

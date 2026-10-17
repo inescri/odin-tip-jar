@@ -15,35 +15,11 @@ interface TipFeedProps {
 }
 
 const styles: Record<string, React.CSSProperties> = {
-    card: {
-        border: '1px solid #e2e2e2',
-        borderRadius: '12px',
-        padding: '1.25rem',
-        marginTop: '1.5rem',
-    },
+    // Table colours live in styles.css (`.feed-table`); layout only here.
+    card: { marginTop: '1.5rem' },
     tableWrap: { overflowX: 'auto' },
-    table: { width: '100%', borderCollapse: 'collapse', fontSize: '0.95rem' },
-    th: {
-        textAlign: 'left',
-        padding: '0.5rem 0.6rem',
-        borderBottom: '1px solid #e2e2e2',
-        fontWeight: 600,
-        fontSize: '0.85rem',
-        opacity: 0.8,
-        whiteSpace: 'nowrap',
-    },
-    td: {
-        padding: '0.5rem 0.6rem',
-        borderBottom: '1px solid #f0f0f0',
-        whiteSpace: 'nowrap',
-    },
-    principal: {
-        fontFamily: 'ui-monospace, monospace',
-        color: 'inherit',
-    },
     amount: { fontVariantNumeric: 'tabular-nums', fontWeight: 600 },
-    note: { fontSize: '0.9rem', opacity: 0.7, margin: 0 },
-    error: { color: '#c0392b', fontSize: '0.9rem', margin: 0 },
+    message: { margin: 0 },
 };
 
 /**
@@ -57,26 +33,26 @@ export function TipFeed({ tips, loading, error = null, hideTo = false }: TipFeed
     const meta = useTokenMeta(tokenIds);
 
     return (
-        <section style={styles.card}>
-            <h2 style={{ marginTop: 0 }}>{t('feed.heading')}</h2>
+        <section className="card" style={styles.card}>
+            <h2>{t('feed.heading')}</h2>
 
             {error !== null ? (
-                <p style={styles.error} role="alert">
+                <p className="error" style={styles.message} role="alert">
                     {error}
                 </p>
             ) : tips.length === 0 ? (
-                <p style={styles.note}>
+                <p className="note" style={styles.message}>
                     {loading ? t('feed.loading') : t('feed.empty')}
                 </p>
             ) : (
                 <div style={styles.tableWrap}>
-                    <table style={styles.table}>
+                    <table className="feed-table">
                         <thead>
                             <tr>
-                                <th style={styles.th}>{t('feed.when')}</th>
-                                <th style={styles.th}>{t('feed.from')}</th>
-                                {hideTo ? null : <th style={styles.th}>{t('feed.to')}</th>}
-                                <th style={styles.th}>{t('feed.amount')}</th>
+                                <th>{t('feed.when')}</th>
+                                <th>{t('feed.from')}</th>
+                                {hideTo ? null : <th>{t('feed.to')}</th>}
+                                <th>{t('feed.amount')}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -86,22 +62,22 @@ export function TipFeed({ tips, loading, error = null, hideTo = false }: TipFeed
                                 const m = meta.get(tip.tokenId);
                                 return (
                                     <tr key={tip.id.toString()}>
-                                        <td style={styles.td}>
+                                        <td>
                                             {formatTipTime(tip.timestamp, i18n.resolvedLanguage)}
                                         </td>
-                                        <td style={styles.td}>
-                                            <a href={buildJarPath(from)} style={styles.principal} title={from}>
+                                        <td>
+                                            <a href={buildJarPath(from)} title={from}>
                                                 {shortPrincipal(from)}
                                             </a>
                                         </td>
                                         {hideTo ? null : (
-                                            <td style={styles.td}>
-                                                <a href={buildJarPath(to)} style={styles.principal} title={to}>
+                                            <td>
+                                                <a href={buildJarPath(to)} title={to}>
                                                     {shortPrincipal(to)}
                                                 </a>
                                             </td>
                                         )}
-                                        <td style={{ ...styles.td, ...styles.amount }}>
+                                        <td style={styles.amount}>
                                             {formatTokenAmount(tip.amount, tokenPlaces(m))}{' '}
                                             {m?.ticker ?? tip.tokenId}
                                         </td>
