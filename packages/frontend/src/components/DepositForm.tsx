@@ -1,13 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Trans, useTranslation } from 'react-i18next';
 import { OdinUtils } from 'odin-connect';
-import type { OdinToken, OdinTokenWithBalance } from 'odin-connect';
+import type { OdinTokenWithBalance } from 'odin-connect';
 
 import { useOdinConnect } from '../odin/useOdinConnect';
 import { approvalFor, claimRequest } from '../odin/approvalFlow';
 import type { ApprovalReturnState } from '../odin/approvalFlow';
 import type { CanisterActor } from '../canister/idl';
-import type { InternalBalance } from '../canister/useInternalBalances';
 import { APP_CANISTER_ID } from '../canister/config';
 import { formatTokenAmount } from '../lib/amounts';
 
@@ -15,8 +14,9 @@ type Stage = 'idle' | 'approving' | 'crediting' | 'done';
 
 interface DepositFormProps {
     actor: CanisterActor | null;
-    balances: InternalBalance[];
     refresh: () => Promise<void>;
+    /** Render without the card chrome and heading (inside the action tabs). */
+    bare?: boolean;
 }
 
 function toMessage(error: unknown, fallback: string): string {
@@ -47,7 +47,6 @@ const styles: Record<string, React.CSSProperties> = {
     },
     error: { color: '#c0392b', fontSize: '0.9rem', marginTop: '0.5rem' },
     ok: { color: '#1e824c', fontSize: '0.9rem', marginTop: '0.5rem' },
-    list: { listStyle: 'none', padding: 0, marginTop: '0.75rem' },
     note: { fontSize: '0.8rem', opacity: 0.7, marginTop: '0.75rem' },
 };
 
@@ -63,12 +62,11 @@ const styles: Record<string, React.CSSProperties> = {
  * itself inside deposit() before crediting — icrcApprove alone only grants the
  * allowance.
  */
-export function DepositForm({ actor, balances, refresh }: DepositFormProps) {
+export function DepositForm({ actor, refresh, bare = false }: DepositFormProps) {
     const { t } = useTranslation();
-    const { user, principal, request, getToken } = useOdinConnect();
+    const { user, principal, request } = useOdinConnect();
 
     const [holdings, setHoldings] = useState<OdinTokenWithBalance[]>([]);
-    const [resolved, setResolved] = useState<Map<string, OdinToken>>(new Map());
     const [selectedId, setSelectedId] = useState('');
     const [amount, setAmount] = useState('');
     const [stage, setStage] = useState<Stage>('idle');
@@ -93,56 +91,6 @@ export function DepositForm({ actor, balances, refresh }: DepositFormProps) {
     useEffect(() => {
         void loadHoldings();
     }, [loadHoldings]);
-
-    // Map Odin token id → token meta, for labelling internal balances.
-    const byId = useMemo(() => {
-        const map = new Map<string, OdinTokenWithBalance>();
-        for (const t of holdings) {
-            map.set(t.token.id, t);
-        }
-        return map;
-    }, [holdings]);
-
-    // Backfill metadata for internal-balance tokens the user no longer holds in
-    // their wallet (so they are absent from getBalances/byId). Without it the
-    // balance list would show the raw token id and an unscaled amount.
-    useEffect(() => {
-        let active = true;
-        const missing = balances
-            .map((b) => b.token)
-            .filter((id) => !byId.has(id) && !resolved.has(id));
-        if (missing.length === 0) {
-            return;
-        }
-        Promise.all(
-            missing.map((id) =>
-                getToken(id)
-                    .then((token) => [id, token] as const)
-                    .catch(() => null),
-            ),
-        ).then((entries) => {
-            if (!active) {
-                return;
-            }
-            setResolved((prev) => {
-                const next = new Map(prev);
-                let changed = false;
-                for (const entry of entries) {
-                    if (entry !== null) {
-                        next.set(entry[0], entry[1]);
-                        changed = true;
-                    }
-                }
-                // Keep the same reference when nothing resolved, otherwise the
-                // new Map re-triggers this effect and re-fetches the same
-                // (failing) ids forever.
-                return changed ? next : prev;
-            });
-        });
-        return () => {
-            active = false;
-        };
-    }, [balances, byId, resolved, getToken]);
 
     // This flow's ICRC-2 approval, if it is the SDK's latest request.
     const approval = approvalFor(request, 'deposit');
@@ -271,8 +219,8 @@ export function DepositForm({ actor, balances, refresh }: DepositFormProps) {
     }, [request, user, actor, refresh, loadHoldings, t]);
 
     return (
-        <section style={styles.card}>
-            <h2 style={{ marginTop: 0 }}>{t('deposit.heading')}</h2>
+        <section style={bare ? undefined : styles.card}>
+            {bare ? null : <h2 style={{ marginTop: 0 }}>{t('deposit.heading')}</h2>}
 
             <div style={styles.row}>
                 <select
@@ -321,26 +269,6 @@ export function DepositForm({ actor, balances, refresh }: DepositFormProps) {
             {shownStage === 'done' && error === null ? (
                 <div style={styles.ok}>{t('deposit.credited')}</div>
             ) : null}
-
-            <h3 style={{ marginBottom: 0 }}>{t('deposit.balancesHeading')}</h3>
-            {balances.length === 0 ? (
-                <p style={styles.note}>{t('deposit.noBalances')}</p>
-            ) : (
-                <ul style={styles.list}>
-                    {balances.map((b) => {
-                        const token = byId.get(b.token)?.token ?? resolved.get(b.token);
-                        const label = token?.ticker ?? b.token;
-                        const value = token
-                            ? formatTokenAmount(b.amount, token.divisibility + token.decimals)
-                            : b.amount.toString();
-                        return (
-                            <li key={b.token}>
-                                <strong>{label}</strong>: {value}
-                            </li>
-                        );
-                    })}
-                </ul>
-            )}
 
             <p style={styles.note}>
                 <Trans i18nKey="deposit.note" components={[<code key="0" />, <code key="1" />]} />

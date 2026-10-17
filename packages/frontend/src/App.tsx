@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 
 import { AuthBar } from './components/AuthBar';
 import { HomePage } from './components/HomePage';
-import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { TipJarPage } from './components/TipJarPage';
 import { useOdinConnect } from './odin/useOdinConnect';
 import { readJarParam } from './lib/jar';
@@ -23,34 +22,15 @@ export function App() {
     );
 
     return (
-        <main style={{ fontFamily: 'system-ui, sans-serif', padding: '2rem', maxWidth: '880px' }}>
-            {/* Wraps as whole groups: the title and the controls each stay
-                intact and move to their own line instead of being squeezed
-                until words break mid-token. */}
-            <header
-                style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '1rem',
-                }}
-            >
-                <h1 style={{ margin: 0 }}>
-                    <a href="/" style={{ color: 'inherit', textDecoration: 'none' }}>
-                        {t('app.title')}
-                    </a>
+        <main className="app">
+            {/* Wraps as whole groups: the title and the account control each
+                stay intact and move to their own line instead of being
+                squeezed until words break mid-token. */}
+            <header className="app-header">
+                <h1>
+                    <a href="/">{t('app.title')}</a>
                 </h1>
-                <div
-                    style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        alignItems: 'center',
-                        gap: '0.75rem',
-                        marginLeft: 'auto',
-                    }}
-                >
-                    <LanguageSwitcher />
+                <div className="header-controls">
                     <AuthBar />
                 </div>
             </header>

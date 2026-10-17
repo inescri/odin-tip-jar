@@ -22,6 +22,8 @@ interface WithdrawFormProps {
     actor: CanisterActor | null;
     balances: InternalBalance[];
     refresh: () => Promise<void>;
+    /** Render without the card chrome and heading (inside the action tabs). */
+    bare?: boolean;
 }
 
 function toMessage(error: unknown, fallback: string): string {
@@ -69,7 +71,7 @@ const styles: Record<string, React.CSSProperties> = {
  * in the SDK state, the canister debits the ledger and sends the tokens back
  * to the caller on the Odin ledger, then the balance refreshes.
  */
-export function WithdrawForm({ actor, balances, refresh }: WithdrawFormProps) {
+export function WithdrawForm({ actor, balances, refresh, bare = false }: WithdrawFormProps) {
     const { t } = useTranslation();
     const { user, request, getToken } = useOdinConnect();
 
@@ -325,8 +327,8 @@ export function WithdrawForm({ actor, balances, refresh }: WithdrawFormProps) {
     }, [request, user, actor, refresh, t]);
 
     return (
-        <section style={styles.card}>
-            <h2 style={{ marginTop: 0 }}>{t('withdraw.heading')}</h2>
+        <section style={bare ? undefined : styles.card}>
+            {bare ? null : <h2 style={{ marginTop: 0 }}>{t('withdraw.heading')}</h2>}
 
             <div style={styles.row}>
                 <select

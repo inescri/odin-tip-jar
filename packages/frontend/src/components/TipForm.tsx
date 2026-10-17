@@ -20,6 +20,8 @@ interface TipFormProps {
     recipient?: string;
     /** Called after a successful tip so the parent can refresh balances/feed. */
     onTipped: () => void | Promise<void>;
+    /** Render without the card chrome and heading (inside the action tabs). */
+    bare?: boolean;
 }
 
 function toMessage(error: unknown, fallback: string): string {
@@ -85,7 +87,7 @@ const styles: Record<string, React.CSSProperties> = {
  * from the click handler. The canister is the source of truth: it re-checks
  * the balance (debit rejects overdrafts) and rejects self/anonymous tips.
  */
-export function TipForm({ actor, balances, recipient, onTipped }: TipFormProps) {
+export function TipForm({ actor, balances, recipient, onTipped, bare = false }: TipFormProps) {
     const { t } = useTranslation();
     const { principal } = useOdinConnect();
 
@@ -184,8 +186,8 @@ export function TipForm({ actor, balances, recipient, onTipped }: TipFormProps) 
     }, [actor, to, principal, selected, selectedToken, amount, locked, onTipped, t]);
 
     return (
-        <section style={styles.card}>
-            <h2 style={{ marginTop: 0 }}>{t('tip.heading')}</h2>
+        <section style={bare ? undefined : styles.card}>
+            {bare ? null : <h2 style={{ marginTop: 0 }}>{t('tip.heading')}</h2>}
 
             <div style={{ ...styles.row, marginBottom: '0.75rem' }}>
                 <span style={styles.label}>{t('tip.recipientLabel')}</span>

@@ -116,48 +116,52 @@ export function TipJarPage({ recipient }: TipJarPageProps) {
                 </div>
             </div>
 
-            <section style={styles.card}>
-                <h2 style={{ marginTop: 0 }}>{t('jar.receivedHeading')}</h2>
-                {totalsState.error !== null ? (
-                    <p style={{ ...styles.note, color: '#c0392b' }} role="alert">
-                        {totalsState.error}
-                    </p>
-                ) : totalsState.totals.length === 0 ? (
-                    <p style={styles.note}>
-                        {totalsState.loading ? t('feed.loading') : t('jar.noReceived')}
-                    </p>
-                ) : (
-                    <ul style={styles.totals}>
-                        {totalsState.totals.map((b) => {
-                            const m = meta.get(b.token);
-                            return (
-                                <li key={b.token} style={styles.total}>
-                                    <span>{m?.ticker ?? b.token}</span>
-                                    <strong>{formatTokenAmount(b.amount, tokenPlaces(m))}</strong>
-                                </li>
-                            );
-                        })}
-                    </ul>
-                )}
-            </section>
-
-            {isOwn ? (
-                <>
-                    <p>{t('jar.ownJar')}</p>
-                    <JarLinkCard principal={recipient} />
-                </>
-            ) : status === 'connected' ? (
-                <TipForm
-                    actor={actor}
-                    balances={balances}
-                    recipient={recipient}
-                    onTipped={onTipped}
-                />
-            ) : status === 'restoring' ? null : (
-                <p>{t('jar.connectToTip')}</p>
-            )}
-
-            <TipFeed tips={feed.tips} loading={feed.loading} error={feed.error} hideTo />
+            <div className="layout" style={{ marginTop: '1.5rem' }}>
+                <div className="layout-main">
+                    {isOwn ? (
+                        <>
+                            <p>{t('jar.ownJar')}</p>
+                            <JarLinkCard principal={recipient} />
+                        </>
+                    ) : status === 'connected' ? (
+                        <TipForm
+                            actor={actor}
+                            balances={balances}
+                            recipient={recipient}
+                            onTipped={onTipped}
+                        />
+                    ) : status === 'restoring' ? null : (
+                        <p>{t('jar.connectToTip')}</p>
+                    )}
+                    <TipFeed tips={feed.tips} loading={feed.loading} error={feed.error} hideTo />
+                </div>
+                <aside className="layout-sidebar">
+                    <section style={styles.card}>
+                        <h2 style={{ marginTop: 0 }}>{t('jar.receivedHeading')}</h2>
+                        {totalsState.error !== null ? (
+                            <p style={{ ...styles.note, color: '#c0392b' }} role="alert">
+                                {totalsState.error}
+                            </p>
+                        ) : totalsState.totals.length === 0 ? (
+                            <p style={styles.note}>
+                                {totalsState.loading ? t('feed.loading') : t('jar.noReceived')}
+                            </p>
+                        ) : (
+                            <ul style={styles.totals}>
+                                {totalsState.totals.map((b) => {
+                                    const m = meta.get(b.token);
+                                    return (
+                                        <li key={b.token} style={styles.total}>
+                                            <span>{m?.ticker ?? b.token}</span>
+                                            <strong>{formatTokenAmount(b.amount, tokenPlaces(m))}</strong>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        )}
+                    </section>
+                </aside>
+            </div>
         </>
     );
 }

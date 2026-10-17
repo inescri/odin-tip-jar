@@ -11,6 +11,13 @@
         "connected": "已连接",
         "disconnect": "断开连接"
     },
+    "account": {
+        "menu": "账户菜单",
+        "copyPrincipal": "复制 principal ID",
+        "copied": "已复制！",
+        "language": "语言",
+        "myJar": "我的打赏罐"
+    },
     "language": {
         "label": "语言",
         "en": "EN",
@@ -30,6 +37,17 @@
         "connectToTip": "使用 Odin 连接以打赏。",
         "loadingProfile": "正在加载资料…",
         "unknownUser": "不是已知的 Odin 用户——打赏仍会发送到此 principal。"
+    },
+    "tabs": {
+        "label": "操作",
+        "send": "发送打赏",
+        "deposit": "充值",
+        "withdraw": "提现"
+    },
+    "balances": {
+        "heading": "内部余额",
+        "empty": "暂无内部余额——先充值开始吧。",
+        "refresh": "刷新"
     },
     "tip": {
         "heading": "发送打赏",
@@ -66,8 +84,6 @@
         "awaitingApproval": "正在等待授权…",
         "crediting": "正在入账…",
         "credited": "充值已入账。",
-        "balancesHeading": "内部余额",
-        "noBalances": "暂无内部余额。",
         "note": "注意：<0>deposit</0> 通过 <1>icrc2_transfer_from</1> 拉取已授权的资金，并在一次调用中为您的余额入账——该入账由 canister 实际转移的代币支持，因此无需可信的铸币方。",
         "errors": {
             "loadTokens": "加载代币失败：{{message}}",
