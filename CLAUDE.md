@@ -1,21 +1,27 @@
-# CLAUDE.md — AI assistant guide for odin-app-template
+# CLAUDE.md — AI assistant guide for odin-tip-jar
 
 This file tells AI coding assistants (Claude Code and others) how to work in
 this repository safely. **Read it before editing.** Per-package rules live in
 `packages/canister/AI_INSTRUCTIONS.md` and `packages/frontend/AI_INSTRUCTIONS.md`.
 
-This is a **reference template** that third-party developers fork to build apps
-on Odin Fun. Clarity and correctness matter more than cleverness — code here is
-copied and learned from.
+This is a fork of the **odin-app-template** reference app, extended into a
+**tip jar**: users deposit Odin tokens once, then tip each other fee-free by
+moving internal balance inside the canister. Clarity and correctness matter
+more than cleverness — the template rules below still apply in full.
 
 ## Project shape
 
 ```
 packages/
-  canister/   # Azle canister — multi-token internal ledger (TypeScript → wasm)
-  frontend/   # Vite + React app — Odin Connect auth + deposit/withdraw UI
+  canister/   # Azle canister — multi-token internal ledger + tipping (TypeScript → wasm)
+    src/ledger.ts   # hardened ledger core (guarded)
+    src/tips.ts     # pure tip-jar helpers: party checks, feed-log keys, bounds
+  frontend/   # Vite + React app — Odin Connect auth + deposit/withdraw/tip UI
 dfx.json      # canister (azle) + frontend (asset) canister config
 ```
+
+Stable memory ids: `0` ledger · `1` config · `2` tip feed · `3` received
+totals. **Never reuse or renumber an id** — it corrupts persisted state.
 
 Stack: Azle 0.33 (stable mode) · React 19 + Vite 8 · pnpm workspace · dfx · Node 22.
 
@@ -54,6 +60,10 @@ guarded code, STOP and surface it to a human instead of editing.
    overdrafts).
 3. Balances are unsigned and bounded (`0 .. MAX_BALANCE`); no overflow.
 4. State mutations happen before cross-canister awaits; failures refund.
+5. `tip` is **synchronous** (no `await`), which is what makes it atomic: a
+   throw anywhere rolls back every map write. Never add a cross-canister call
+   to it. It composes `debit` / `credit` and so cannot create balance; the
+   sender is debited and persisted before the recipient is read.
 
 ## Conventions
 

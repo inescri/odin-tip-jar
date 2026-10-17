@@ -6,16 +6,19 @@ Rules for working inside the Azle canister package. Read alongside the root
 ## What this package is
 
 An Azle (TypeScript → wasm) canister implementing a **multi-token internal
-ledger**: it tracks an internal balance per `(principal, token)` pair and
-exposes deposit/withdraw/balance endpoints. Tokens are identified by their
-ICRC-1 canister principal.
+ledger** with **fee-free tipping**: it tracks an internal balance per
+`(principal, token)` pair and exposes deposit/withdraw/balance endpoints plus
+`tip` and the public tip-feed queries. Tokens are identified by their Odin
+token id (text); every Odin token shares one ledger canister.
 
 ```
 src/
-  index.ts      # canister class — endpoints + StableBTreeMap wiring
-  ledger.ts     # pure ledger logic (key encoding, validation, balance math)
-  icrc1.ts      # minimal ICRC-1 icrc1_transfer client
-  ledger.test.ts# vitest unit tests for the pure logic
+  index.ts       # canister class — endpoints + StableBTreeMap wiring
+  ledger.ts      # pure ledger logic (key encoding, validation, balance math)
+  tips.ts        # pure tip-jar logic (party checks, feed-log keys, bounds)
+  odin.ts        # Odin ledger client (icrc2_transfer_from / icrc1_transfer)
+  ledger.test.ts # vitest unit tests for ledger.ts
+  tips.test.ts   # vitest unit tests for tips.ts
 ```
 
 ## Hard rules
@@ -34,18 +37,27 @@ src/
    — precision loss is a fund-loss bug.
 5. **Validate every update-call input.** Reuse `validateAmount`; reject zero,
    negative, and over-max values.
+6. **Keep `tip` synchronous.** It has no `await`, so it is atomic and cannot
+   interleave with other messages. Never add a cross-canister call to it. It
+   must debit (and persist) the sender before reading the recipient, and must
+   keep rejecting anonymous parties and self-tips (`assertTipParties`).
 
 ## Patterns to follow
 
-- Put new pure logic in `ledger.ts` (or a new runtime-free module) and unit-test
-  it. Anything importing from `azle` cannot run under plain vitest.
+- Put new pure logic in `ledger.ts` / `tips.ts` (or a new runtime-free module)
+  and unit-test it. Anything importing from `azle` cannot run under plain
+  vitest.
 - New endpoints: stable-mode decorators (`@query` / `@update`) with explicit
   `IDL` param and return types. Use `msgCaller()` for the caller principal.
 - Cross-canister calls: stable `call(canisterId, method, { args, paramIdlTypes,
   returnIdlType })`. Decode variant results and handle the `Err` branch.
 - StableBTreeMap: each map needs a **unique, stable memory id**. Current ids:
-  `0` = ledger, `1` = config. Never reuse or renumber an existing id — it
-  corrupts persisted state across upgrades.
+  `0` = ledger, `1` = config, `2` = tip feed, `3` = received totals. Never
+  reuse or renumber an existing id — it corrupts persisted state across
+  upgrades. Keys are ordered by their serialized bytes, so numeric ordering
+  needs a zero-padded string key (see `tipKey`).
+- The tip feed is bounded (`MAX_TIPS`, oldest evicted). It is a UX feed, not an
+  audit log; `received` holds the exact lifetime totals.
 
 ## Build & test
 

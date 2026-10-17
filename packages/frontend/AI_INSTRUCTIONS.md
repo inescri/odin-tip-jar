@@ -5,17 +5,38 @@ Rules for working inside the frontend package. Read alongside the root
 
 ## What this package is
 
-A Vite + React + TypeScript app — the reference UI for an Odin Fun app: log in
-with Odin Connect, show the user's principal and internal balances, and drive
-the deposit/withdraw flows against the canister.
+A Vite + React + TypeScript app — the Odin Tip Jar UI: log in with Odin
+Connect, deposit/withdraw against the canister, tip other users, and browse
+public tip jar pages and the recent-tips feed.
 
 ```
 src/
-  main.tsx      # React entry
-  App.tsx       # root component
+  main.tsx                    # React entry
+  App.tsx                     # header + `?jar=` routing (HomePage / TipJarPage)
+  components/HomePage.tsx     # jar link, tip/deposit/withdraw forms, global feed
+  components/TipJarPage.tsx   # one user's jar: profile, totals, feed, locked TipForm
+  components/TipForm.tsx      # direct `actor.tip(...)` call — no Odin approval
+  components/TipFeed.tsx      # public feed table
+  components/JarLinkCard.tsx  # shareable /?jar=<principal> link
+  canister/useTips.ts         # useRecentTips / useReceivedTotals
+  canister/useAnonymousActor.ts # query-only actor for logged-out reads
+  odin/useTokenMeta.ts        # token ticker/decimals via the public API
+  odin/useOdinProfile.ts      # username/avatar for any principal
+  lib/jar.ts                  # `?jar=` parsing, jar URLs, shortPrincipal
 index.html      # Vite html entry
 vite.config.ts  # build config (outDir: dist → served by the asset canister)
 ```
+
+Tip-jar specifics:
+
+- `?jar=<principal>` is read **only once `status !== 'restoring'`** (after
+  odin-connect's `ready()` restored the query) and is never stripped. It is
+  validated with `parsePrincipal` and never used as a navigation target.
+- The anonymous actor is for public queries only. `tip` / `deposit` /
+  `withdraw` always go through the delegated actor (`useCanisterActor`).
+- `tip` needs no Odin approval, so `TipForm` awaits the canister call directly
+  from the click handler — the state-store/`request` pattern below is for
+  flows that open Odin (connect, deposit, withdraw).
 
 Stack: React 19, Vite 8, TypeScript strict. Built output (`dist/`) is what the
 dfx `frontend` asset canister serves.
