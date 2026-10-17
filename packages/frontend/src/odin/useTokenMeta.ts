@@ -1,21 +1,26 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { OdinToken } from 'odin-connect';
 
+import { KNOWN_TOKENS } from '../lib/tokens';
+import type { TokenMeta } from '../lib/tokens';
 import { useOdinConnect } from './useOdinConnect';
 
+export { tokenPlaces } from '../lib/tokens';
+export type { TokenMeta } from '../lib/tokens';
+
 /**
- * Resolve Odin token metadata (ticker, divisibility, decimals, …) for a set
- * of token ids via the public token endpoint — works while logged out, which
+ * Resolve Odin token metadata (ticker, divisibility, decimals) for a set of
+ * token ids via the public token endpoint — works while logged out, which
  * the tip feed and tip jar pages need.
  *
- * Ids that fail to resolve are remembered and not retried, and the returned
- * Map keeps its identity when nothing new resolved, so effects depending on
- * it do not loop.
+ * Ledger built-ins the endpoint does not serve (BTC) come from
+ * `KNOWN_TOKENS` and are never fetched. Ids that fail to resolve are
+ * remembered and not retried, and the returned Map keeps its identity when
+ * nothing new resolved, so effects depending on it do not loop.
  */
-export function useTokenMeta(tokenIds: readonly string[]): Map<string, OdinToken> {
+export function useTokenMeta(tokenIds: readonly string[]): Map<string, TokenMeta> {
     const { getToken } = useOdinConnect();
-    const [resolved, setResolved] = useState<Map<string, OdinToken>>(
-        () => new Map(),
+    const [resolved, setResolved] = useState<Map<string, TokenMeta>>(
+        () => new Map(KNOWN_TOKENS),
     );
     const failed = useRef(new Set<string>());
 
@@ -67,9 +72,4 @@ export function useTokenMeta(tokenIds: readonly string[]): Map<string, OdinToken
     }, [idsKey, resolved, getToken]);
 
     return resolved;
-}
-
-/** Display scale for a token: Odin amounts scale by divisibility + decimals. */
-export function tokenPlaces(token: OdinToken | undefined): number {
-    return token ? token.divisibility + token.decimals : 0;
 }

@@ -20,7 +20,8 @@ src/
   components/JarLinkCard.tsx  # shareable /?jar=<principal> link
   canister/useTips.ts         # useRecentTips / useReceivedTotals
   canister/useAnonymousActor.ts # query-only actor for logged-out reads
-  odin/useTokenMeta.ts        # token ticker/decimals via the public API
+  odin/useTokenMeta.ts        # token ticker/decimals via the public API (+ KNOWN_TOKENS)
+  lib/tokens.ts               # TokenMeta type, built-in token meta (BTC is not served by /token/:id)
   odin/useOdinProfile.ts      # username/avatar for any principal
   lib/jar.ts                  # `?jar=` parsing, jar URLs, shortPrincipal
 index.html      # Vite html entry
