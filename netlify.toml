@@ -1,0 +1,15 @@
+# Netlify hosts the frontend; the backend canister runs on the IC.
+# Set these environment variables in the Netlify site settings (not here —
+# VITE_* values are baked into the bundle at build time):
+#   VITE_APP_CANISTER_ID = <mainnet id of `canister`>
+#   VITE_DFX_NETWORK     = ic
+#   VITE_ODIN_ENV        = prod
+# Then add the Netlify site origin (https://<site>.netlify.app) to
+# TRUSTED_ORIGINS in packages/canister/src/index.ts and redeploy the canister.
+
+[build]
+  command = "pnpm --filter @odin-tip-jar/frontend build"
+  publish = "packages/frontend/dist"
+
+[build.environment]
+  NODE_VERSION = "22"

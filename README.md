@@ -286,6 +286,9 @@ cover both. See `ODIN_BTC_FEE` in
 
 ## Deploy to mainnet
 
+The reference deployment's backend canister is `v7drs-jyaaa-aaaaf-qhaca-cai`
+(network `ic`).
+
 1. Make sure you have a cycles-funded identity (`dfx identity get-principal`,
    then fund it with cycles — see the
    [cycles docs](https://internetcomputer.org/docs/current/developer-docs/getting-started/cycles/cycles-wallet)).
@@ -297,6 +300,19 @@ cover both. See `ODIN_BTC_FEE` in
    dfx deploy --network ic          # deploy canister + frontend asset canister
    ```
 
+   Canister creation costs 0.5 TC each, so on a small cycles balance deploy
+   only the backend and host the static frontend elsewhere:
+
+   ```sh
+   dfx deploy canister --network ic --with-cycles 1000000000000
+   ```
+
+   A [`netlify.toml`](netlify.toml) is included for Netlify: it builds
+   `packages/frontend` and publishes `dist`. Set `VITE_APP_CANISTER_ID`,
+   `VITE_DFX_NETWORK=ic` and `VITE_ODIN_ENV=prod` in the site's environment
+   variables (they are baked into the bundle at build time), then put the
+   Netlify origin in `TRUSTED_ORIGINS` (step 5).
+
 3. The deploying principal is recorded as the **owner** (see `@init` in
    [`packages/canister/src/index.ts`](packages/canister/src/index.ts)) — a
    generic admin handle for any admin-gated endpoints you add later. Deposits are
@@ -305,7 +321,9 @@ cover both. See `ODIN_BTC_FEE` in
    needed.
 
 4. Note the canister IDs printed on deploy; the frontend reads them from the
-   generated `.env` (`output_env_file` in `dfx.json`).
+   generated `.env` (`output_env_file` in `dfx.json`). Mainnet ids are written
+   to `canister_ids.json`, which is gitignored by default — keep a copy (or
+   remove it from `.gitignore`) or dfx will create a new canister next time.
 
 5. **Set your trusted origins.** Edit `TRUSTED_ORIGINS` in
    [`packages/canister/src/index.ts`](packages/canister/src/index.ts) to the
